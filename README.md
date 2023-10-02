@@ -18,6 +18,8 @@ The code is structured into several functions, each performing a specific task r
 - `tag_version(repo, latest_tag)`: Tags a new version of the code in the local repository.
 - `main()`: The main function that executes the program and contains the main loop to continuously prompt the user for choices until the user chooses to exit.
 
+  ![image](https://github.com/grinntec/git-helper/assets/40019507/52835528-47c8-4cdc-b59f-a9a047f93315)
+
 ## Compiling the Python File into a Binary using PyInstaller
 
 To compile the Python file into a binary, you can use PyInstaller. PyInstaller bundles a Python application and all its dependencies into a single package. Follow the steps below to compile the Python file:
