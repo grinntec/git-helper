@@ -281,3 +281,17 @@ index 623bbf0..235d2e7 100644
 +This project is licensed under the MIT License - see the LICENSE.md file for details.
 \ No newline at end of file
 ```
+
+## 0.0.2 - 2023-10-03
+change diff to only relevant files
+
+### Diff:
+```
+diff --git a/git-helper.py b/git-helper.py
+index 2ab4d65..d74cb1f 100644
+--- a/git-helper.py
++++ b/git-helper.py
+@@ -251 +251 @@ def tag_version(repo, latest_tag):
+-    diff = repo.git.diff()
++    diff = repo.git.diff('--unified=0')
+```

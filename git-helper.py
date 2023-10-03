@@ -248,7 +248,7 @@ def tag_version(repo, latest_tag):
         return
     
     # Get the diff of the repository and create a new tag with the new version
-    diff = repo.git.diff()
+    diff = repo.git.diff('--unified=0')
     repo.create_tag(str(new_version))
     
     # Open the CHANGELOG.md file and append the new version, date, and changes made in this version
