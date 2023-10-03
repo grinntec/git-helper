@@ -178,12 +178,15 @@ def push_commits(repo, branch_name):
         # Attempt to push commits from the specified local branch to the corresponding remote branch on the origin
         repo.git.push('origin', branch_name)
         
+        # Push tags to the remote repository
+        repo.git.push('origin', '--tags')
+        
         # Log a success message if the push operation is successful
-        logger.info(f"{ANSWER_TEXT}Unpushed commits have been pushed to the origin.{RESET_TEXT}")
+        logger.info(f"{ANSWER_TEXT}Unpushed commits and tags have been pushed to the origin.{RESET_TEXT}")
         
     except Exception as e:
         # Log an error message if any exception occurs during the push operation
-        logger.error(f"{ERROR_TEXT}Error pushing commits: {e}{RESET_TEXT}")
+        logger.error(f"{ERROR_TEXT}Error pushing commits or tags: {e}{RESET_TEXT}")
 
 
 #--- Define a function to commit all staged changes in the local repository ---#
