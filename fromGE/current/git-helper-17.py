@@ -437,7 +437,12 @@ def tag_version(repo, latest_tag):
     current_version = VersionInfo.parse(latest_tag if latest_tag != "No tags available" else '0.0.0')
     logger.info(f"{OUTPUT_TEXT}Current version: {ANSWER_TEXT}{current_version}{RESET_TEXT}")
 
-    version_choices = ["1. Increment major version", "2. Increment minor version", "3. Increment patch version"]
+    version_choices = [
+        "1. Increment major version",
+        "2. Increment minor version",
+        "3. Increment patch version",
+        "4. Exit without tagging"
+    ]
     for choice in version_choices:
         logger.info(f"{OUTPUT_TEXT}{choice}{RESET_TEXT}")
 
@@ -449,8 +454,11 @@ def tag_version(repo, latest_tag):
         new_version = current_version.bump_minor()
     elif version_choice == '3':
         new_version = current_version.bump_patch()
+    elif version_choice == '4':
+        logger.info(f"{ANSWER_TEXT}Exiting without tagging.{RESET_TEXT}")
+        return
     else:
-        logger.error(f"{ERROR_TEXT}Invalid choice. Please enter a number between 1 and 3.{RESET_TEXT}")
+        logger.error(f"{ERROR_TEXT}Invalid choice. Please enter a number between 1 and 4.{RESET_TEXT}")
         return
 
     diff = repo.git.diff('HEAD~1', '--unified=0')
@@ -473,6 +481,7 @@ def tag_version(repo, latest_tag):
         logger.info(f"{ANSWER_TEXT}Tag {new_version} has been pushed to the remote repository.{RESET_TEXT}")
     except git.exc.GitCommandError as e:
         logger.error(f"{ERROR_TEXT}Error pushing tag to remote: {e}{RESET_TEXT}")
+
 
 #############################################################################################################
 # --- Update the change log ---#
