@@ -1,22 +1,20 @@
-# Git Automation Tool
+# Git Helper
 
-This tool automates various Git operations such as pushing commits, committing changes, adding files, tagging versions, and more. It provides a user-friendly interface to perform these operations with ease.
+`git-helper.py` is a Python script designed to assist with common Git operations.
 
-## Code Overview
+## Overview
 
-The code is structured into several functions, each performing a specific task related to Git operations. Here's a brief overview of the main functions:
+The script provides a set of functions to automate and simplify various Git tasks. It's designed to be user-friendly and can be easily integrated into any development workflow.
 
-- `initialize_repository()`: Initializes the Git repository and sets the current working directory as the repository path.
-- `compare_with_origin(repo, branch_name)`: Compares the local branch with the remote branch and logs the differences.
-- `log_repository_info(repo, branch_name, latest_tag)`: Logs information about the repository, including the working directory, branch name, and the latest tag.
-- `log_status(comparison_result)`: Logs the status of the repository by comparing it with the origin.
-- `log_options()`: Logs the available options to the user.
-- `get_user_choice()`: Prompts the user to enter their choice and returns the input.
-- `push_commits(repo, branch_name)`: Pushes the unpushed commits to the origin.
-- `commit_changes(repo)`: Commits the uncommitted changes in the local repository.
-- `add_files(repo)`: Adds all untracked files in the local repository to the staging area.
-- `tag_version(repo, latest_tag)`: Tags a new version of the code in the local repository.
-- `main()`: The main function that executes the program and contains the main loop to continuously prompt the user for choices until the user chooses to exit.
+## Features
+
+- **Initialize a Git Repository**: Quickly set up a new Git repository with essential configurations.
+- **Add Files**: Add specific files or all changes to the staging area.
+- **Commit Changes**: Commit the staged changes with a custom message.
+- **Push Changes**: Push the committed changes to the remote repository.
+- **Pull Changes**: Fetch and merge changes from the remote repository.
+- **Clone a Repository**: Clone a remote Git repository to your local machine.
+- **Check Status**: View the current status of your Git repository, including changes not yet staged or committed.
 
   ![image](https://github.com/grinntec/git-helper/assets/40019507/52835528-47c8-4cdc-b59f-a9a047f93315)
 
