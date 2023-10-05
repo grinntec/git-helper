@@ -1,11 +1,14 @@
 import os
 import sys
 import git
+from git import Repo
 import logging
 import semver
 from semver import VersionInfo
 import datetime
 from enum import Enum
+import tempfile
+import shutil
 
 # Configure the basic settings for logging
 # Set the logging level to INFO, so it will capture Info, Warning, Error, and Critical messages
@@ -25,23 +28,83 @@ ANSWER_TEXT = '\033[92m'  # Green
 ERROR_TEXT = '\033[91m\033[1m'  # Bold Red
 OUTPUT_TEXT = '\033[97m'  # White
 HELP_TEXT = '\033[90m'  # Grey
+WARNING_TEXT = '\033[93m'  # Yellow
 RESET_TEXT = '\033[0m'  # Reset
+
+# Constants
+PROGRAM_TITLE = "Git Helper"
+PROGRAM_AUTHOR = "Neil Grinnall"
+PROGRAM_HELP_TEXT = "A guided method to using Git"
+PROGRAM_VERSION = "1.0.0"
+PROGRAM_DATE = "2023-10-04"
 
 #--- Define an enumeration class named UserChoice ---#
 class UserChoice(Enum):
     # Each member of this enumeration represents a user choice in the application
+    
+    # REFRESH checks and displays the current status with no actions taken
+    REFRESH = ('0', 'REFRESH and display current status')
+    
+    # PULL represents the choice to pull changes from the remote repository
+    PULL = ('1', 'PULL changes from remote repository')  
+    
     # PUSH represents the choice to push changes to the remote repository
-    PUSH = '1'    
+    PUSH = ('2', 'PUSH changes to remote repository (into MAIN branch)')    
+    
     # COMMIT represents the choice to commit changes to the local repository
-    COMMIT = '2'
+    COMMIT = ('3', 'COMMIT changes to local repository')
+    
     # ADD represents the choice to add changes to the staging area
-    ADD = '3'    
+    ADD = ('4', 'ADD changes/files to staging area')    
+    
     # TAG represents the choice to tag a specific commit
-    TAG = '4'    
+    TAG = ('5', 'TAG the repository')    
+    
     # EXIT represents the choice to exit the application
-    EXIT = '5'
+    EXIT = ('6', 'Exit the application')
+#############################################################################################################
+# --- Display a title card --- #
+def display_title(title, author, help_text, version, date):
+    """
+    Display a professional-looking title in the console.
 
-#--- Define a function to initialize the git repository --- #
+    Args:
+    - title (str): The title of the program.
+    - author (str): The author's name.
+    - help_text (str): A brief description of what the program does.
+    - version (str): The version of the program.
+    - date (str): The release or update date.
+    """    
+    # Determine the maximum length for proper formatting
+    max_length = max(len(title), len(author), len(help_text), len(version) + len("Version: "), len(date) + len("Date: "))
+    
+    # Print the top border
+    print("+" + "-" * (max_length + 2) + "+")
+    
+    # Print the title, centered
+    print("| " + title.center(max_length) + " |")
+    print("| " + ("Version: " + version).center(max_length) + " |")
+    print("| " + ("Date: " + date).center(max_length) + " |")
+    print("| " + ("Author: " + author).center(max_length) + " |")
+    print("| " + "-" * max_length + " |")
+    
+    # Print the help text, centered
+    print("| " + help_text.center(max_length) + " |")
+    
+    # Print the bottom border
+    print("+" + "-" * (max_length + 2) + "+")
+#############################################################################################################
+# --- Clear the console screen --- #
+def clear_screen():
+    """
+    Clear the console screen.
+    """
+    os.system('cls' if os.name == 'nt' else 'clear')
+#############################################################################################################
+def prompt_to_continue():
+    input("Press enter to continue...")
+#############################################################################################################
+#--- Initialize the git repository --- #
 def initialize_repository():
     # Get the current working directory and set it as the repository path
     repo_path = os.getcwd()
@@ -70,64 +133,8 @@ def initialize_repository():
         
     # Return the Repo object, active branch name, and the latest tag as a string
     return repo, branch_name, str(latest_tag)
-
-
-#--- Define a function to compare the local repository with the remote origin ---#
-def compare_with_origin(repo, branch_name):
-    try:
-        # Fetch the latest changes from the remote origin
-        repo.remotes.origin.fetch()
-        
-        # Check if there are any uncommitted changes in the working directory
-        uncommitted_changes = repo.is_dirty()
-        
-        # Get a list of untracked files in the working directory
-        untracked_files = repo.untracked_files
-        
-        # Get the latest commit in the local branch
-        local_commit = repo.commit(branch_name)
-        
-        # Get the latest commit in the remote branch
-        remote_commit = repo.commit(f'origin/{branch_name}')
-        
-        # If the local and remote commits are the same, and there are no uncommitted changes or untracked files,
-        # return a message indicating that the working directory and local branch are up to date with the origin
-        if local_commit.hexsha == remote_commit.hexsha and not uncommitted_changes and not untracked_files:
-            return f"{ANSWER_TEXT}The working directory and the local branch {branch_name} are up to date with the origin.{RESET_TEXT}"
-        
-        # Initialize lists to store messages about differences and guidance
-        differences, guidance = [], []
-        
-        # If the local and remote commits are different, list the unpushed commits and provide guidance
-        if local_commit.hexsha != remote_commit.hexsha:
-            unpushed_commits = list(repo.iter_commits(f'origin/{branch_name}..{branch_name}'))
-            formatted_unpushed_commits = '\n'.join([f"{OUTPUT_TEXT}  - {commit.message.strip()}{RESET_TEXT}" for commit in unpushed_commits])
-            differences.append(f"{ERROR_TEXT}There are unpushed commits:{RESET_TEXT}\n{formatted_unpushed_commits}")
-            guidance.append("Consider pushing your commits to synchronize with the remote repository.")
-        
-        # If there are uncommitted changes, list the modified files and provide guidance
-        if uncommitted_changes:
-            modified_files = repo.git.diff('--name-only').splitlines()
-            formatted_modified_files = '\n'.join([f"{OUTPUT_TEXT}  - {file}{RESET_TEXT}" for file in modified_files])
-            differences.append(f"{ERROR_TEXT}There are uncommitted changes in the working directory:{RESET_TEXT}\n{formatted_modified_files}")
-            guidance.append("Consider committing or stashing your changes before synchronizing with the remote repository.")
-        
-        # If there are untracked files, list them and provide guidance
-        if untracked_files:
-            formatted_untracked_files = '\n'.join([f"{OUTPUT_TEXT}  - {file}{RESET_TEXT}" for file in untracked_files])
-            differences.append(f"{ERROR_TEXT}There are untracked files:{RESET_TEXT}\n{formatted_untracked_files}")
-            guidance.append("Consider adding new files to the repository or updating the .gitignore file if these files should not be tracked.")
-        
-        # Join the differences and guidance messages and return them
-        differences_str = '\n'.join(differences)
-        guidance_str = '\n'.join(guidance)
-        return f"{ERROR_TEXT}{differences_str}{RESET_TEXT}\n\n{HELP_TEXT}Guidance:\n{guidance_str}{RESET_TEXT}"
-        
-    except Exception as e:
-        # Return an error message if any exception occurs during the comparison
-        return f"{ERROR_TEXT}Error comparing with the origin: {e}{RESET_TEXT}"
-
-#--- Define a function to log information about the repository, branch, and latest tag ---#
+#############################################################################################################
+#--- Log information about the repository, branch, and latest tag ---#
 def log_repository_info(repo, branch_name, latest_tag):
     # Log a header for the repository information section
     logger.info(f"\n{BOLD_TEXT}--- Repository Information ---{RESET_TEXT}")
@@ -135,105 +142,309 @@ def log_repository_info(repo, branch_name, latest_tag):
     # Log the current working directory of the repository, the active branch name, and the latest tag
     # The information is highlighted using different text styles for better visibility
     logger.info(f"{OUTPUT_TEXT}You are working in the {ANSWER_TEXT}{repo.working_tree_dir}{OUTPUT_TEXT} repository on the {ANSWER_TEXT}{branch_name}{OUTPUT_TEXT} branch. The latest tag (version) is {ANSWER_TEXT}{latest_tag}{RESET_TEXT}\n")
-
-
-#--- Define a function to log the status of the repository by displaying the comparison result ---#
+#############################################################################################################
+#--- Log the status of the repository by displaying the comparison result ---#
 def log_status(comparison_result):
     # Log a header for the status section to separate it visually in the log output
-    logger.info(f"{BOLD_TEXT}--- Status ---{RESET_TEXT}")
+    logger.info(f"{BOLD_TEXT}--- Differences between local and origin ---{RESET_TEXT}")
     
     # Log the result of the comparison between the local and remote repository
     # The comparison_result is expected to contain messages about the state of the repository, 
     # such as differences between local and remote, uncommitted changes, untracked files, etc.
     logger.info(comparison_result)
-
-#--- Define a function to log the available options that a user can choose from--- #
+#############################################################################################################
+#--- Log the available options that a user can choose from--- #
 def log_options():
     # Log a header for the options section to visually separate it in the log output
     logger.info(f"\n{BOLD_TEXT}--- Options ---{RESET_TEXT}")
     
     # Iterate over each member of the UserChoice enumeration
     for choice in UserChoice:
-        # For each choice, log its value and name, with the name capitalized and spaces replacing underscores
-        # The name is also converted to lowercase after capitalization to maintain a consistent format
-        logger.info(f"{OUTPUT_TEXT}{choice.value}. {choice.name.capitalize().replace('_', ' ').lower()}{RESET_TEXT}")
-
-#--- Define a function to prompt the user to enter their choice and return the entered choice ---#
+        # Extract the number and description from the value
+        number, description = choice.value
+        logger.info(f"{OUTPUT_TEXT}{number}. {description}{RESET_TEXT}")
+#############################################################################################################
+#--- Log a visual separator in the console ---#
+def log_separator():
+    # Log a series of dashes as a visual separator to organize the console output
+    # The separator is highlighted using a specific text style for better visibility
+    logger.info(f"{BOLD_TEXT}-----------------------------{RESET_TEXT}\n")
+#############################################################################################################
+#--- Prompt the user to enter their choice and return the entered choice ---#
 def get_user_choice():
     # Display a prompt to the user asking them to enter the number corresponding to their choice
     # The prompt is highlighted using a specific text style for better visibility
     # The function then returns the user’s input as a string
     return input(f"\n{QUESTION_TEXT}Enter the number of your choice: {RESET_TEXT}")
+#############################################################################################################
+#--- Compare the local repository with the remote origin ---#
+def compare_with_origin(repo, branch_name):
+    try:
+        # Fetch the latest changes from the remote origin
+        repo.remotes.origin.fetch()
 
-#--- Define a function to log a visual separator in the console ---#
-def log_separator():
-    # Log a series of dashes as a visual separator to organize the console output
-    # The separator is highlighted using a specific text style for better visibility
-    logger.info(f"{BOLD_TEXT}-----------------------------{RESET_TEXT}\n")
+        # Initialize a string for the messages
+        messages = ''
 
-#--- Define a function to push commits from the local branch to the remote origin ---#
+        # Check if the local branch is ahead of or behind the remote branch
+        behind_commits = list(repo.iter_commits(f'{branch_name}..origin/{branch_name}'))
+        ahead_commits = list(repo.iter_commits(f'origin/{branch_name}..{branch_name}'))
+
+        # If the local branch is behind, show the number and guidance
+        if behind_commits:
+            messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}Local branch {branch_name} is behind the remote origin by {len(behind_commits)} commits.{RESET_TEXT}\n"
+            # List files that are changed in the commits the local branch is behind
+            files_to_pull = []
+            for commit in behind_commits:
+                for modified_file in commit.stats.files:
+                    files_to_pull.append(modified_file)
+            files_to_pull = list(set(files_to_pull))  # Remove duplicates
+            messages += f"{ANSWER_TEXT}Files on remote to be pulled:\n"
+            for file in files_to_pull:
+                messages += f"{OUTPUT_TEXT}  - {file}{RESET_TEXT}\n\n"
+            messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(1.)PULLING{RESET_TEXT}{HELP_TEXT} the changes from the remote repository.{RESET_TEXT}\n"
+            messages += f"{HELP_TEXT}>    Files exist on the remote repository that you do not have locally.{RESET_TEXT}\n"
+            messages += f"{HELP_TEXT}>    Pulling the files will update your local copy of the repository to match the remote one.{RESET_TEXT}\n\n"
+
+        # If the local branch is ahead, show the commits and guidance
+        if ahead_commits:
+            messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}Local branch {branch_name} is ahead of the remote origin by {len(ahead_commits)} commits.{RESET_TEXT}\n"
+            messages += f"{ANSWER_TEXT}Commits waiting to be pushed:{RESET_TEXT}\n"
+            for commit in ahead_commits:
+                messages += f"{OUTPUT_TEXT}{commit.hexsha[:7]} - {commit.author.name}: {commit.summary}{RESET_TEXT}\n\n"
+            messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(2.)PUSHING{RESET_TEXT}{HELP_TEXT} your commits to synchronize with the remote repository.{RESET_TEXT}\n"
+            messages += f"{HELP_TEXT}>    Files exist on the local repository that do not exist on the remote one.{RESET_TEXT}\n"
+            messages += f"{HELP_TEXT}>    Pushing the files will update the remote repository to match the local one.{RESET_TEXT}\n\n"
+
+        # Get the messages for uncommitted changes and untracked files
+        messages += get_uncommitted_changes(repo)
+
+        return messages
+        
+    except Exception as e:
+        # Return an error message if any exception occurs during the comparison
+        return f"{ERROR_TEXT}Error comparing with the origin: {e}{RESET_TEXT}"
+#############################################################################################################
+# --- Get uncommited changes --- #
+def get_uncommitted_changes(repo):
+    messages = ""
+
+    # Get modified but not staged files
+    unstaged_files = repo.git.diff('--name-only').splitlines()
+
+    # Get staged but not yet committed files
+    staged_files = repo.git.diff('--cached', '--name-only').splitlines()
+
+    # Get newly added (untracked) files
+    untracked_files = repo.untracked_files
+
+    if staged_files:
+        formatted_staged_files = '\n'.join([f"{OUTPUT_TEXT}  Modified (staged): {file}{RESET_TEXT}" for file in staged_files])
+        messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}There are uncommited changes:{RESET_TEXT}\n{formatted_staged_files}{RESET_TEXT}\n\n"
+        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(3.)COMMITTING{RESET_TEXT} your changes.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    Files that have been marked for inclusion in the next commit.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    You shouldn't change these files any further.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    Once staged, the files will be pushed to the origin.{RESET_TEXT}\n\n"
+
+    if unstaged_files:
+        formatted_unstaged_files = '\n'.join([f"{OUTPUT_TEXT}  Modified (not staged): {file}{RESET_TEXT}" for file in unstaged_files])
+        messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}There are changes to existing files which aren't yet added to staging:{RESET_TEXT}\n{formatted_unstaged_files}{RESET_TEXT}\n\n"
+        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(4.)ADDING{RESET_TEXT} the changed files to staging.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    Already existing files that have been changed since the last commit, but not yet staged.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    Only add files that are ready to be staged and then committed to the origin repository.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    When added, the files will be staged where you will then commit them.{RESET_TEXT}\n\n"
+
+    if untracked_files:
+        formatted_untracked_files = '\n'.join([f"{OUTPUT_TEXT}  New file (untracked): {file}{RESET_TEXT}" for file in untracked_files])
+        messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}There are new (untracked) files which aren't yet added to staging:{RESET_TEXT}\n{formatted_untracked_files}{RESET_TEXT}\n\n"
+        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(4.)ADDING{RESET_TEXT} the new files to staging.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    New files that are recognized by Git, but they have not yet been added to staging in preparation for a commit.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    Only add files that are ready to be staged and then committed to the origin repository.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    When added, the files will be staged where you will then commit them.{RESET_TEXT}\n\n"
+
+    return messages
+#############################################################################################################
+# --- Pull from origin --- #
+def pull_origin(repo, branch_name):
+    try:
+        # Fetch the latest changes from the remote origin
+        repo.remotes.origin.fetch()
+
+        # Check if there are any new commits on the remote branch that aren't on the local branch
+        commits_behind = list(repo.iter_commits(f'{branch_name}..origin/{branch_name}'))
+        
+        if commits_behind:
+            # Merge the changes from the remote branch into the local branch
+            repo.git.pull('origin', branch_name)
+            
+            # Log a success message if the pull operation is successful
+            logger.info(f"{ANSWER_TEXT}Successfully pulled changes from the remote origin to the local {branch_name} branch.{RESET_TEXT}")
+        else:
+            # Log a message indicating the local branch is already up to date with the remote branch
+            logger.info(f"{ANSWER_TEXT}The local {branch_name} branch is already up to date with the remote origin.{RESET_TEXT}")
+
+    except git.exc.GitCommandError as e:
+        # Handle specific Git errors, like merge conflicts
+        if 'fix conflicts' in str(e):
+            logger.error(f"{ERROR_TEXT}Merge conflict detected! Please resolve the conflicts manually and then commit the changes.{RESET_TEXT}")
+        else:
+            logger.error(f"{ERROR_TEXT}Error pulling changes from the origin: {e}{RESET_TEXT}")
+
+    except Exception as e:
+        # Log an error message if any other exception occurs during the pull operation
+        logger.error(f"{ERROR_TEXT}An unexpected error occurred: {e}{RESET_TEXT}")
+#############################################################################################################
+# --- Push commits from the local branch to the remote origin ---#
 def push_commits(repo, branch_name):
     try:
-        # Attempt to push commits from the specified local branch to the corresponding remote branch on the origin
-        repo.git.push('origin', branch_name)
-        
-        # Push tags to the remote repository
-        repo.git.push('origin', '--tags')
-        
-        # Log a success message if the push operation is successful
-        logger.info(f"{ANSWER_TEXT}Unpushed commits and tags have been pushed to the origin.{RESET_TEXT}")
-        
-    except Exception as e:
-        # Log an error message if any exception occurs during the push operation
-        logger.error(f"{ERROR_TEXT}Error pushing commits or tags: {e}{RESET_TEXT}")
+        # Check for unpushed commits
+        commits_ahead = list(repo.iter_commits(f'origin/{branch_name}..{branch_name}'))
 
-#--- Define a function to commit all staged changes in the local repository ---#
+        # If there are unpushed commits, push them to the remote
+        if commits_ahead:
+            # Attempt to push commits from the specified local branch to the corresponding remote branch on the origin
+            repo.git.push('origin', branch_name)
+            logger.info(f"{ANSWER_TEXT}Unpushed commits have been pushed to the origin.{RESET_TEXT}")
+        else:
+            # Log a message indicating there were no unpushed commits
+            logger.info(f"{ANSWER_TEXT}No unpushed commits to push to the origin.{RESET_TEXT}")
+
+    except git.exc.GitCommandError as e:
+        # Handle specific Git errors, suggesting pull if push is rejected
+        if 'rejected' in str(e):
+            logger.error(f"{ERROR_TEXT}Push was rejected. Consider pulling changes first and then try pushing again.{RESET_TEXT}")
+        else:
+            logger.error(f"{ERROR_TEXT}Error pushing commits: {e}{RESET_TEXT}")
+
+    except Exception as e:
+        # Log an error message if any other exception occurs during the push operation
+        logger.error(f"{ERROR_TEXT}An unexpected error occurred: {e}{RESET_TEXT}")
+#############################################################################################################
+# --- Commit changes --- #
 def commit_changes(repo):
-    # Prompt the user to enter a commit message and store the input
-    commit_message = input(f"{QUESTION_TEXT}Enter a commit message: {RESET_TEXT}")
-    
+
+    def get_changed_files():
+        untracked = repo.untracked_files
+        changed = [item.a_path for item in repo.index.diff(None)]
+        staged = [item.a_path for item in repo.index.diff('HEAD')]
+        return untracked, changed, staged
+
+    untracked_files, changed_files, staged_files = get_changed_files()
+
+    if not staged_files:
+        logger.info(f"{ANSWER_TEXT}No staged changes to commit.{RESET_TEXT}")
+        return
+
+    # Display the files
+    for category, files in [("Staged files", staged_files)]:
+        print(f"{QUESTION_TEXT}{category}:{RESET_TEXT}")
+        for file in files:
+            print(file)
+
+    commit_message = input(f"{QUESTION_TEXT}Enter a single-line commit message (or 'exit' to quit): {RESET_TEXT}").strip()
+
+    if commit_message.lower() == 'exit':
+        logger.info(f"{ANSWER_TEXT}Exiting commit process.{RESET_TEXT}")
+        return
+
+    while not commit_message.strip():
+        commit_message = input(f"{ERROR_TEXT}Commit message can't be empty! Please enter a valid single-line commit message (or 'exit' to quit): {RESET_TEXT}").strip()
+        if commit_message.lower() == 'exit':
+            logger.info(f"{ANSWER_TEXT}Exiting commit process.{RESET_TEXT}")
+            return
+
     try:
-        # Attempt to stage all changes in the working directory
-        repo.git.add('.')  # Stage all changes
-        
-        # Attempt to commit the staged changes with the provided commit message
         repo.git.commit('-m', commit_message)
-        
-        # Log a success message if the commit operation is successful
-        logger.info(f"{ANSWER_TEXT}Uncommitted changes have been committed.{RESET_TEXT}")
-        
-    except Exception as e:
-        # Log an error message if any exception occurs during the commit operation
+        logger.info(f"{ANSWER_TEXT}Staged changes have been committed.{RESET_TEXT}")
+    except git.exc.GitCommandError as e:
         logger.error(f"{ERROR_TEXT}Error committing changes: {e}{RESET_TEXT}")
-
-#--- Define a function to add all untracked files in the local repository to the staging area ---#
-def add_files(repo):
-    try:
-        # Attempt to add all untracked files in the working directory to the staging area
-        repo.git.add('.')
-        
-        # Log a success message if the add operation is successful
-        logger.info(f"{ANSWER_TEXT}Untracked files have been added.{RESET_TEXT}")
-        
     except Exception as e:
-        # Log an error message if any exception occurs during the add operation
-        logger.error(f"{ERROR_TEXT}Error adding files: {e}{RESET_TEXT}")
+        logger.error(f"{ERROR_TEXT}An unexpected error occurred: {e}{RESET_TEXT}")
+#############################################################################################################
+# --- Add files --- #
+def add_files(repo):
+    # Fetching the list of untracked files
+    untracked_files = repo.untracked_files
 
-#--- Define a function to update the CHANGELOG.md file with the new version and changes ---#
-def update_changelog(version, diff):
-    with open('CHANGELOG.md', 'a') as f:
-        f.write(f"\n## {version} - {datetime.datetime.now().strftime('%Y-%m-%d')}\n")
-        changes = input(f"{QUESTION_TEXT}Enter the changes included in this version (separate multiple changes with commas): {RESET_TEXT}")
-        f.write(', '.join(changes.split(',')) + f"\n\n### Diff:\n```\n{diff}\n```\n")
-    logger.info(f"{ANSWER_TEXT}CHANGELOG.md has been updated with version {version} and associated changes.{RESET_TEXT}")
+    # Fetching the list of modified but not staged files
+    modified_not_staged_files = repo.git.diff('--name-only').splitlines()
 
-#--- Define a function to tag a new version of the code in the local repository ---#
+    # Combine the lists for simplicity in further steps
+    files_to_display = untracked_files + modified_not_staged_files
+
+    # If there are no files to display, notify the user and return
+    if not files_to_display:
+        logger.info(f"{ANSWER_TEXT}No untracked or modified files found.{RESET_TEXT}")
+        return
+    
+    # Display the files
+    print(f"{QUESTION_TEXT}Files ready for staging:{RESET_TEXT}")
+    for file in files_to_display:
+        status = "Untracked" if file in untracked_files else "Modified (not staged)"
+        print(f"{file} ({status})")
+
+    while True:
+        user_decision = input(f"{QUESTION_TEXT}Would you like to add all files? (yes/no/exit): {RESET_TEXT}").strip().lower()
+        
+        if user_decision == 'yes':
+            try:
+                repo.git.add('-A')
+                logger.info(f"{ANSWER_TEXT}All files added successfully!{RESET_TEXT}")
+                break
+            except git.exc.GitCommandError as e:
+                # Handle specific Git errors
+                logger.error(f"{ERROR_TEXT}Error adding files: {e}{RESET_TEXT}")
+
+        elif user_decision == 'no':
+            files_to_add = input(f"{QUESTION_TEXT}Enter the names of the files you'd like to add, separated by spaces: {RESET_TEXT}").split()
+            
+            # Check if user provided any filenames
+            if not files_to_add:
+                logger.warning(f"{WARNING_TEXT}No files provided. Please specify files to add or choose 'yes' to add all.{RESET_TEXT}")
+                continue
+            
+            # Attempt to add specified files
+            added_any = False
+            for file in files_to_add:
+                if file in files_to_display:
+                    try:
+                        repo.git.add(file)
+                        added_any = True
+                    except git.exc.GitCommandError as e:
+                        # Handle specific Git errors
+                        logger.error(f"{ERROR_TEXT}Error adding file {file}: {e}{RESET_TEXT}")
+                else:
+                    logger.warning(f"{WARNING_TEXT}File {file} was not in the list and was skipped.{RESET_TEXT}")
+
+            # If we added any files, log success and break out
+            if added_any:
+                logger.info(f"{ANSWER_TEXT}Selected files have been added.{RESET_TEXT}")
+                break
+
+        elif user_decision == 'exit':
+            logger.info(f"{ANSWER_TEXT}Exiting file addition process.{RESET_TEXT}")
+            return
+
+        else:
+            logger.warning(f"{WARNING_TEXT}Invalid input. Please enter 'yes', 'no', or 'exit'.{RESET_TEXT}")
+#############################################################################################################
+# --- Create the tag ---#
 def tag_version(repo, latest_tag):
+    if repo.is_dirty():
+        logger.error(f"{ERROR_TEXT}Uncommitted changes detected. Please commit your changes before tagging a new version.{RESET_TEXT}")
+        return
+
     current_version = VersionInfo.parse(latest_tag if latest_tag != "No tags available" else '0.0.0')
     logger.info(f"{OUTPUT_TEXT}Current version: {ANSWER_TEXT}{current_version}{RESET_TEXT}")
-    logger.info(f"{OUTPUT_TEXT}1. Increment major version{RESET_TEXT}")
-    logger.info(f"{OUTPUT_TEXT}2. Increment minor version{RESET_TEXT}")
-    logger.info(f"{OUTPUT_TEXT}3. Increment patch version{RESET_TEXT}")
+
+    version_choices = [
+        "1. Increment major version",
+        "2. Increment minor version",
+        "3. Increment patch version",
+        "4. Exit without tagging"
+    ]
+    for choice in version_choices:
+        logger.info(f"{OUTPUT_TEXT}{choice}{RESET_TEXT}")
 
     version_choice = input(f"{QUESTION_TEXT}Enter the number of your choice: {RESET_TEXT}")
 
@@ -243,52 +454,116 @@ def tag_version(repo, latest_tag):
         new_version = current_version.bump_minor()
     elif version_choice == '3':
         new_version = current_version.bump_patch()
+    elif version_choice == '4':
+        logger.info(f"{ANSWER_TEXT}Exiting without tagging.{RESET_TEXT}")
+        return
     else:
-        logger.error(f"{ERROR_TEXT}Invalid choice. Please enter a number between 1 and 3.{RESET_TEXT}")
+        logger.error(f"{ERROR_TEXT}Invalid choice. Please enter a number between 1 and 4.{RESET_TEXT}")
         return
 
-    diff = repo.git.diff('--unified=0')
+    diff = repo.git.diff('HEAD~1', '--unified=0')
+
+    # Create the tag locally without a message
     repo.create_tag(str(new_version))
-    
-    # Call the function to update the changelog
+
+    # Update the changelog
     update_changelog(new_version, diff)
 
+    # Commit changelog update
+    if repo.is_dirty():
+        repo.git.add('-A')
+        repo.git.commit('-m', f"Update changelog for version {new_version}")
 
+    try:
+        # Push commits and tags to remote repository
+        repo.git.push('origin', 'HEAD')
+        repo.git.push('origin', '--tags')
+        logger.info(f"{ANSWER_TEXT}Tag {new_version} has been pushed to the remote repository.{RESET_TEXT}")
+    except git.exc.GitCommandError as e:
+        logger.error(f"{ERROR_TEXT}Error pushing tag to remote: {e}{RESET_TEXT}")
+
+
+#############################################################################################################
+# --- Update the change log ---#
+def get_repo_root():
+    """Get the root directory of the git repository."""
+    repo = Repo(os.getcwd(), search_parent_directories=True)
+    return repo.git.rev_parse("--show-toplevel")
+
+def update_changelog(version, diff):
+    repo_root = get_repo_root()
+    changelog_path = os.path.join(repo_root, 'CHANGELOG.md')
+    temp_file = os.path.join(repo_root, "CHANGELOG_TEMP.md")
+    
+    try:
+        with open(temp_file, 'w') as temp:
+            # Check if CHANGELOG.md exists in the repo root
+            if os.path.exists(changelog_path):
+                with open(changelog_path, 'r') as original:
+                    # Write the new changelog entry at the top
+                    temp.write(f"\n## {version} - {datetime.datetime.now().strftime('%Y-%m-%d')}\n")
+                    
+                    # Ask for changes with a semicolon delimiter
+                    changes_input = input(f"{QUESTION_TEXT}Enter the changes included in this version (separate multiple changes with ';'): {RESET_TEXT}")
+                    changes = changes_input.split(';')
+                    
+                    for change in changes:
+                        temp.write(f"- {change.strip()}\n")
+                    temp.write(f"\n### Diff:\n```\n{diff}\n```\n\n")
+                    
+                    # Copy the rest of the original changelog
+                    temp.write(original.read())
+            else:
+                print(f"{ANSWER_TEXT}CHANGELOG.md not found in the repository root. Creating a new one.{RESET_TEXT}")
+                temp.write(f"\n## {version} - {datetime.datetime.now().strftime('%Y-%m-%d')}\n")
+        
+        # Replace the original changelog with the temporary one
+        shutil.move(temp_file, changelog_path)
+        print(f"{ANSWER_TEXT}CHANGELOG.md in the repository root has been updated with version {version} and associated changes.{RESET_TEXT}")
+    except Exception as e:
+        print(f"Error updating CHANGELOG.md: {e}")
+#############################################################################################################
+def get_user_choice():
+    choice = input("\nEnter the number of your choice: ")
+    return choice
+#############################################################################################################
 # Define the main function to execute the program
 def main():
-    # Initialize the repository and log the repository information
-    repo, branch_name, latest_tag = initialize_repository()
-    log_repository_info(repo, branch_name, latest_tag)
-    
-    # Enter into an infinite loop to continuously prompt the user for choices until the user chooses to exit
     while True:
-        # Log the status of the repository by comparing with the origin and log the available options to the user
+        clear_screen()
+        display_title(PROGRAM_TITLE, PROGRAM_AUTHOR, PROGRAM_HELP_TEXT, PROGRAM_VERSION, PROGRAM_DATE)
+
+        repo, branch_name, latest_tag = initialize_repository()
+        log_repository_info(repo, branch_name, latest_tag)
+
         comparison_result = compare_with_origin(repo, branch_name)
         log_status(comparison_result)
         log_options()
 
-        # Prompt the user for their choice and handle the choice accordingly
         choice = get_user_choice()
 
-        if choice == UserChoice.PUSH.value:
+        if choice == UserChoice.REFRESH.value[0]:
+            repo, branch_name, latest_tag = initialize_repository()
+        elif choice == UserChoice.PULL.value[0]:
+            pull_origin(repo, branch_name)
+        elif choice == UserChoice.PUSH.value[0]:
             push_commits(repo, branch_name)
-        elif choice == UserChoice.COMMIT.value:
+        elif choice == UserChoice.COMMIT.value[0]:
             commit_changes(repo)
-        elif choice == UserChoice.ADD.value:
+        elif choice == UserChoice.ADD.value[0]:
             add_files(repo)
-        elif choice == UserChoice.TAG.value:
+        elif choice == UserChoice.TAG.value[0]:
             tag_version(repo, latest_tag)
-            # Re-fetch the latest tag after a new tag has been created
             latest_tag = str(max(repo.tags, key=lambda t: semver.VersionInfo.parse(t.name)) if repo.tags else "No tags available")
-        elif choice == UserChoice.EXIT.value:
+        elif choice == UserChoice.EXIT.value[0]:
             logger.info(f"{ANSWER_TEXT}Exiting the program. Goodbye!{RESET_TEXT}")
             sys.exit(0)
         else:
-            logger.error(f"{ERROR_TEXT}Invalid choice. Please select a valid option.{RESET_TEXT}")
-
-        # Log a visual separator for better organization in the console
-        log_separator()
-
-# Execute the main function when the script is run
+            logger.error(f"{ERROR_TEXT}Invalid choice! Please select a valid option.{RESET_TEXT}")
+        
+        # Only prompt to continue if choice wasn't "Refresh" or "Exit"
+        if choice != UserChoice.REFRESH.value[0] and choice != UserChoice.EXIT.value[0]:
+            prompt_to_continue()
+#############################################################################################################         
 if __name__ == "__main__":
     main()
