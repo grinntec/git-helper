@@ -1,7 +1,7 @@
 import os
 import sys
 import git
-from git import repo
+from git import Repo
 import logging
 import semver
 from semver import VersionInfo
