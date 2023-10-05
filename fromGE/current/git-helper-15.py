@@ -1,6 +1,7 @@
 import os
 import sys
 import git
+from git import repo
 import logging
 import semver
 from semver import VersionInfo
@@ -487,13 +488,19 @@ def tag_version(repo, latest_tag):
         logger.error(f"{ERROR_TEXT}Error pushing tag to remote: {e}{RESET_TEXT}")
 #############################################################################################################
 # --- Update the change log ---#
+def get_repo_root():
+    """Get the root directory of the git repository."""
+    repo = Repo(os.getcwd(), search_parent_directories=True)
+    return repo.git.rev_parse("--show-toplevel")
+
 def update_changelog(version, diff):
-    changelog_path = 'CHANGELOG.md'
-    temp_file = "CHANGELOG_TEMP.md"
+    repo_root = get_repo_root()
+    changelog_path = os.path.join(repo_root, 'CHANGELOG.md')
+    temp_file = os.path.join(repo_root, "CHANGELOG_TEMP.md")
     
     try:
         with open(temp_file, 'w') as temp:
-            # Check if CHANGELOG.md exists in the CWD
+            # Check if CHANGELOG.md exists in the repo root
             if os.path.exists(changelog_path):
                 with open(changelog_path, 'r') as original:
                     # Write the new changelog entry at the top
@@ -510,14 +517,17 @@ def update_changelog(version, diff):
                     # Copy the rest of the original changelog
                     temp.write(original.read())
             else:
-                print(f"{ANSWER_TEXT}CHANGELOG.md not found in the current working directory. Creating a new one.{RESET_TEXT}")
+                print(f"{ANSWER_TEXT}CHANGELOG.md not found in the repository root. Creating a new one.{RESET_TEXT}")
                 temp.write(f"\n## {version} - {datetime.datetime.now().strftime('%Y-%m-%d')}\n")
         
         # Replace the original changelog with the temporary one
         shutil.move(temp_file, changelog_path)
-        print(f"{ANSWER_TEXT}CHANGELOG.md in the current working directory has been updated with version {version} and associated changes.{RESET_TEXT}")
+        print(f"{ANSWER_TEXT}CHANGELOG.md in the repository root has been updated with version {version} and associated changes.{RESET_TEXT}")
     except Exception as e:
         print(f"Error updating CHANGELOG.md: {e}")
+
+
+
 
 
 
