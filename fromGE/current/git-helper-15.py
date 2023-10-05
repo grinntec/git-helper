@@ -7,6 +7,7 @@ from semver import VersionInfo
 import datetime
 from enum import Enum
 import tempfile
+import shutil
 
 # Configure the basic settings for logging
 # Set the logging level to INFO, so it will capture Info, Warning, Error, and Critical messages
@@ -486,18 +487,16 @@ def tag_version(repo, latest_tag):
         logger.error(f"{ERROR_TEXT}Error pushing tag to remote: {e}{RESET_TEXT}")
 #############################################################################################################
 # --- Update the change log ---#
-import datetime
-import os
-import shutil
-
-
 def update_changelog(version, diff):
-    temp_file = "CHANGELOG_TEMP.md"
+    cwd = os.getcwd()
+    changelog_path = os.path.join(cwd, 'CHANGELOG.md')
+    temp_file = os.path.join(cwd, "CHANGELOG_TEMP.md")
+    
     try:
         with open(temp_file, 'w') as temp:
-            # Check if CHANGELOG.md exists
-            if os.path.exists('CHANGELOG.md'):
-                with open('CHANGELOG.md', 'r') as original:
+            # Check if CHANGELOG.md exists in the CWD
+            if os.path.exists(changelog_path):
+                with open(changelog_path, 'r') as original:
                     # Write the new changelog entry at the top
                     temp.write(f"\n## {version} - {datetime.datetime.now().strftime('%Y-%m-%d')}\n")
                     
@@ -512,14 +511,16 @@ def update_changelog(version, diff):
                     # Copy the rest of the original changelog
                     temp.write(original.read())
             else:
-                print(f"{ANSWER_TEXT}CHANGELOG.md not found. Creating a new one.{RESET_TEXT}")
+                print(f"{ANSWER_TEXT}CHANGELOG.md not found in the current working directory. Creating a new one.{RESET_TEXT}")
                 temp.write(f"\n## {version} - {datetime.datetime.now().strftime('%Y-%m-%d')}\n")
         
         # Replace the original changelog with the temporary one
-        shutil.move(temp_file, 'CHANGELOG.md')
-        print(f"{ANSWER_TEXT}CHANGELOG.md has been updated with version {version} and associated changes.{RESET_TEXT}")
+        shutil.move(temp_file, changelog_path)
+        print(f"{ANSWER_TEXT}CHANGELOG.md in the current working directory has been updated with version {version} and associated changes.{RESET_TEXT}")
     except Exception as e:
         print(f"Error updating CHANGELOG.md: {e}")
+
+
 
 
 #############################################################################################################
