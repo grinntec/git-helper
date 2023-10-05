@@ -360,8 +360,6 @@ def commit_changes(repo):
         logger.error(f"{ERROR_TEXT}Error committing changes: {e}{RESET_TEXT}")
     except Exception as e:
         logger.error(f"{ERROR_TEXT}An unexpected error occurred: {e}{RESET_TEXT}")
-
-
 #############################################################################################################
 # --- Add files --- #
 def add_files(repo):
@@ -429,8 +427,6 @@ def add_files(repo):
 
         else:
             logger.warning(f"{WARNING_TEXT}Invalid input. Please enter 'yes', 'no', or 'exit'.{RESET_TEXT}")
-
-
 #############################################################################################################
 # --- Create the tag ---#
 def tag_version(repo, latest_tag):
@@ -459,10 +455,8 @@ def tag_version(repo, latest_tag):
 
     diff = repo.git.diff('HEAD~1', '--unified=0')
 
-    tag_message = input(f"{QUESTION_TEXT}Enter a message for this tag (optional): {RESET_TEXT}")
-
-    # Create the tag locally
-    repo.create_tag(str(new_version), message=tag_message.strip())
+    # Create the tag locally without a message
+    repo.create_tag(str(new_version))
 
     # Update the changelog
     update_changelog(new_version, diff)
@@ -479,6 +473,7 @@ def tag_version(repo, latest_tag):
         logger.info(f"{ANSWER_TEXT}Tag {new_version} has been pushed to the remote repository.{RESET_TEXT}")
     except git.exc.GitCommandError as e:
         logger.error(f"{ERROR_TEXT}Error pushing tag to remote: {e}{RESET_TEXT}")
+
 #############################################################################################################
 # --- Update the change log ---#
 def get_repo_root():
@@ -518,14 +513,6 @@ def update_changelog(version, diff):
         print(f"{ANSWER_TEXT}CHANGELOG.md in the repository root has been updated with version {version} and associated changes.{RESET_TEXT}")
     except Exception as e:
         print(f"Error updating CHANGELOG.md: {e}")
-
-
-
-
-
-
-
-
 #############################################################################################################
 def get_user_choice():
     choice = input("\nEnter the number of your choice: ")
