@@ -486,26 +486,41 @@ def tag_version(repo, latest_tag):
         logger.error(f"{ERROR_TEXT}Error pushing tag to remote: {e}{RESET_TEXT}")
 #############################################################################################################
 # --- Update the change log ---#
+import datetime
+import os
+import shutil
+
+
 def update_changelog(version, diff):
     temp_file = "CHANGELOG_TEMP.md"
-    with open(temp_file, 'w') as temp, open('CHANGELOG.md', 'r') as original:
-        # Write the new changelog entry at the top
-        temp.write(f"\n## {version} - {datetime.datetime.now().strftime('%Y-%m-%d')}\n")
+    try:
+        with open(temp_file, 'w') as temp:
+            # Check if CHANGELOG.md exists
+            if os.path.exists('CHANGELOG.md'):
+                with open('CHANGELOG.md', 'r') as original:
+                    # Write the new changelog entry at the top
+                    temp.write(f"\n## {version} - {datetime.datetime.now().strftime('%Y-%m-%d')}\n")
+                    
+                    # Ask for changes with a semicolon delimiter
+                    changes_input = input(f"{QUESTION_TEXT}Enter the changes included in this version (separate multiple changes with ';'): {RESET_TEXT}")
+                    changes = changes_input.split(';')
+                    
+                    for change in changes:
+                        temp.write(f"- {change.strip()}\n")
+                    temp.write(f"\n### Diff:\n```\n{diff}\n```\n\n")
+                    
+                    # Copy the rest of the original changelog
+                    temp.write(original.read())
+            else:
+                print(f"{ANSWER_TEXT}CHANGELOG.md not found. Creating a new one.{RESET_TEXT}")
+                temp.write(f"\n## {version} - {datetime.datetime.now().strftime('%Y-%m-%d')}\n")
         
-        # Ask for changes with a semicolon delimiter
-        changes_input = input(f"{QUESTION_TEXT}Enter the changes included in this version (separate multiple changes with ';'): {RESET_TEXT}")
-        changes = changes_input.split(';')
-        
-        for change in changes:
-            temp.write(f"- {change.strip()}\n")
-        temp.write(f"\n### Diff:\n```\n{diff}\n```\n\n")
-        
-        # Copy the rest of the original changelog
-        temp.write(original.read())
-    
-    # Replace the original changelog with the temporary one
-    os.replace(temp_file, 'CHANGELOG.md')
-    logger.info(f"{ANSWER_TEXT}CHANGELOG.md has been updated with version {version} and associated changes.{RESET_TEXT}")
+        # Replace the original changelog with the temporary one
+        shutil.move(temp_file, 'CHANGELOG.md')
+        print(f"{ANSWER_TEXT}CHANGELOG.md has been updated with version {version} and associated changes.{RESET_TEXT}")
+    except Exception as e:
+        print(f"Error updating CHANGELOG.md: {e}")
+
 
 #############################################################################################################
 def get_user_choice():
@@ -549,7 +564,6 @@ def main():
         # Only prompt to continue if choice wasn't "Refresh" or "Exit"
         if choice != UserChoice.REFRESH.value[0] and choice != UserChoice.EXIT.value[0]:
             prompt_to_continue()
-
 #############################################################################################################         
 if __name__ == "__main__":
     main()
