@@ -1,4 +1,47 @@
 
+## 10.0.0 - 2023-10-05
+- this works
+
+### Diff:
+```
+diff --git a/fromGE/current/git-helper-17.py b/fromGE/current/git-helper-17.py
+index a00098c..cd8c14b 100644
+--- a/fromGE/current/git-helper-17.py
++++ b/fromGE/current/git-helper-17.py
+@@ -344,2 +344,3 @@ def commit_changes(repo):
+-    commit_message_input = input(f"{QUESTION_TEXT}Enter a commit message (separate lines with ';', or 'exit' to quit): {RESET_TEXT}").strip()
+-    if commit_message_input.lower() == 'exit':
++    commit_message = input(f"{QUESTION_TEXT}Enter a single-line commit message (or 'exit' to quit): {RESET_TEXT}").strip()
++
++    if commit_message.lower() == 'exit':
+@@ -349,2 +349,0 @@ def commit_changes(repo):
+-    commit_message = commit_message_input.replace(";", "\n")
+-
+@@ -352,2 +351,2 @@ def commit_changes(repo):
+-        commit_message_input = input(f"{ERROR_TEXT}Commit message can't be empty! Please enter a valid commit message (separate lines with ';', or 'exit' to quit): {RESET_TEXT}").strip()
+-        if commit_message_input.lower() == 'exit':
++        commit_message = input(f"{ERROR_TEXT}Commit message can't be empty! Please enter a valid single-line commit message (or 'exit' to quit): {RESET_TEXT}").strip()
++        if commit_message.lower() == 'exit':
+@@ -356,6 +354,0 @@ def commit_changes(repo):
+-        commit_message = commit_message_input.replace(";", "\n")
+-
+-    # Write commit message to temporary file and commit
+-    with tempfile.NamedTemporaryFile(mode='w+', delete=False) as tmp_file:
+-        tmp_file.write(commit_message)
+-        tmp_filename = tmp_file.name
+@@ -364,2 +357 @@ def commit_changes(repo):
+-        repo.git.commit('-F', tmp_filename)
+-        os.remove(tmp_filename)  # Clean up the temporary file
++        repo.git.commit('-m', commit_message)
+@@ -368 +359,0 @@ def commit_changes(repo):
+-        os.remove(tmp_filename)  # Clean up the temporary file
+@@ -371 +361,0 @@ def commit_changes(repo):
+-        os.remove(tmp_filename)  # Clean up the temporary file
+@@ -373,0 +364 @@ def commit_changes(repo):
++
+```
+
+
 ## 9.0.0 - 2023-10-05
 - fixed a load of comment
 - looks great now
