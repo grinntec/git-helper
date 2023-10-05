@@ -225,6 +225,45 @@ def compare_with_origin(repo, branch_name):
         # Return an error message if any exception occurs during the comparison
         return f"{ERROR_TEXT}Error comparing with the origin: {e}{RESET_TEXT}"
 #############################################################################################################
+# --- Get uncommited changes --- #
+def get_uncommitted_changes(repo):
+    messages = ""
+
+    # Get modified but not staged files
+    unstaged_files = repo.git.diff('--name-only').splitlines()
+
+    # Get staged but not yet committed files
+    staged_files = repo.git.diff('--cached', '--name-only').splitlines()
+
+    # Get newly added (untracked) files
+    untracked_files = repo.untracked_files
+
+    if staged_files:
+        formatted_staged_files = '\n'.join([f"{OUTPUT_TEXT}  Modified (staged): {file}{RESET_TEXT}" for file in staged_files])
+        messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}There are uncommited changes:{RESET_TEXT}\n{formatted_staged_files}{RESET_TEXT}\n\n"
+        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(3.)COMMITTING{RESET_TEXT} your changes.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    Files that have been marked for inclusion in the next commit.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    You shouldn't change these files any further.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    Once staged, the files will be pushed to the origin.{RESET_TEXT}\n\n"
+
+    if unstaged_files:
+        formatted_unstaged_files = '\n'.join([f"{OUTPUT_TEXT}  Modified (not staged): {file}{RESET_TEXT}" for file in unstaged_files])
+        messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}There are changes to existing files which aren't yet added to staging:{RESET_TEXT}\n{formatted_unstaged_files}{RESET_TEXT}\n\n"
+        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(4.)ADDING{RESET_TEXT} the changed files to staging.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    Already existing files that have been changed since the last commit, but not yet staged.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    Only add files that are ready to be staged and then committed to the origin repository.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    When added, the files will be staged where you will then commit them.{RESET_TEXT}\n\n"
+
+    if untracked_files:
+        formatted_untracked_files = '\n'.join([f"{OUTPUT_TEXT}  New file (untracked): {file}{RESET_TEXT}" for file in untracked_files])
+        messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}There are new (untracked) files which aren't yet added to staging:{RESET_TEXT}\n{formatted_untracked_files}{RESET_TEXT}\n\n"
+        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(4.)ADDING{RESET_TEXT} the new files to staging.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    New files that are recognized by Git, but they have not yet been added to staging in preparation for a commit.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    Only add files that are ready to be staged and then committed to the origin repository.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    When added, the files will be staged where you will then commit them.{RESET_TEXT}\n\n"
+
+    return messages
+#############################################################################################################
 # --- Pull from origin --- #
 def pull_origin(repo, branch_name):
     try:
@@ -303,13 +342,17 @@ def commit_changes(repo):
             print(file)
 
     commit_message_input = input(f"{QUESTION_TEXT}Enter a commit message (separate lines with ';', or 'exit' to quit): {RESET_TEXT}").strip()
+    if commit_message_input.lower() == 'exit':
+        logger.info(f"{ANSWER_TEXT}Exiting commit process.{RESET_TEXT}")
+        return
+
     commit_message = commit_message_input.replace(";", "\n")
 
     while not commit_message.strip():
-        if commit_message.lower() == 'exit':
+        commit_message_input = input(f"{ERROR_TEXT}Commit message can't be empty! Please enter a valid commit message (separate lines with ';', or 'exit' to quit): {RESET_TEXT}").strip()
+        if commit_message_input.lower() == 'exit':
             logger.info(f"{ANSWER_TEXT}Exiting commit process.{RESET_TEXT}")
             return
-        commit_message_input = input(f"{ERROR_TEXT}Commit message can't be empty! Please enter a valid commit message (separate lines with ';', or 'exit' to quit): {RESET_TEXT}").strip()
         commit_message = commit_message_input.replace(";", "\n")
 
     # Write commit message to temporary file and commit
@@ -327,6 +370,7 @@ def commit_changes(repo):
     except Exception as e:
         os.remove(tmp_filename)  # Clean up the temporary file
         logger.error(f"{ERROR_TEXT}An unexpected error occurred: {e}{RESET_TEXT}")
+
 #############################################################################################################
 # --- Add files --- #
 def add_files(repo):
@@ -395,45 +439,7 @@ def add_files(repo):
         else:
             logger.warning(f"{WARNING_TEXT}Invalid input. Please enter 'yes', 'no', or 'exit'.{RESET_TEXT}")
 
-#############################################################################################################
-# --- Get uncommited changes --- #
-def get_uncommitted_changes(repo):
-    messages = ""
 
-    # Get modified but not staged files
-    unstaged_files = repo.git.diff('--name-only').splitlines()
-
-    # Get staged but not yet committed files
-    staged_files = repo.git.diff('--cached', '--name-only').splitlines()
-
-    # Get newly added (untracked) files
-    untracked_files = repo.untracked_files
-
-    if staged_files:
-        formatted_staged_files = '\n'.join([f"{OUTPUT_TEXT}  Modified (staged): {file}{RESET_TEXT}" for file in staged_files])
-        messages += f"{ANSWER_TEXT}{UNDERLINE_TEXT}There are uncommited changes:{RESET_TEXT}\n{formatted_staged_files}{RESET_TEXT}\n\n"
-        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(3.)COMMITTING{RESET_TEXT} your changes.{RESET_TEXT}\n"
-        messages += f"{HELP_TEXT}>    Files that have been marked for inclusion in the next commit.{RESET_TEXT}\n"
-        messages += f"{HELP_TEXT}>    You shouldn't change these files any further.{RESET_TEXT}\n"
-        messages += f"{HELP_TEXT}>    Once staged, the files will be pushed to the origin.{RESET_TEXT}\n\n"
-
-    if unstaged_files:
-        formatted_unstaged_files = '\n'.join([f"{OUTPUT_TEXT}  Modified (not staged): {file}{RESET_TEXT}" for file in unstaged_files])
-        messages += f"{ANSWER_TEXT}{UNDERLINE_TEXT}There are changes to existing files which aren't yet added to staging:{RESET_TEXT}\n{formatted_unstaged_files}{RESET_TEXT}\n\n"
-        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(4.)ADDING{RESET_TEXT} the changed files to staging.{RESET_TEXT}\n"
-        messages += f"{HELP_TEXT}>    Already existing files that have been changed since the last commit, but not yet staged.{RESET_TEXT}\n"
-        messages += f"{HELP_TEXT}>    Only add files that are ready to be staged and then committed to the origin repository.{RESET_TEXT}\n"
-        messages += f"{HELP_TEXT}>    When added, the files will be staged where you will then commit them.{RESET_TEXT}\n\n"
-
-    if untracked_files:
-        formatted_untracked_files = '\n'.join([f"{OUTPUT_TEXT}  New file (untracked): {file}{RESET_TEXT}" for file in untracked_files])
-        messages += f"{ANSWER_TEXT}{UNDERLINE_TEXT}There are new (untracked) files which aren't yet added to staging:{RESET_TEXT}\n{formatted_untracked_files}{RESET_TEXT}\n\n"
-        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(4.)ADDING{RESET_TEXT} the new files to staging.{RESET_TEXT}\n"
-        messages += f"{HELP_TEXT}>    New files that are recognized by Git, but they have not yet been added to staging in preparation for a commit.{RESET_TEXT}\n"
-        messages += f"{HELP_TEXT}>    Only add files that are ready to be staged and then committed to the origin repository.{RESET_TEXT}\n"
-        messages += f"{HELP_TEXT}>    When added, the files will be staged where you will then commit them.{RESET_TEXT}\n\n"
-
-    return messages
 #############################################################################################################
 # --- Create the tag ---#
 def tag_version(repo, latest_tag):
