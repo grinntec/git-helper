@@ -1,4 +1,33 @@
 
+## 11.0.0 - 2023-10-05
+- added exit to tag function
+
+### Diff:
+```
+diff --git a/fromGE/current/git-helper-17.py b/fromGE/current/git-helper-17.py
+index a5c2edf..6611df6 100644
+--- a/fromGE/current/git-helper-17.py
++++ b/fromGE/current/git-helper-17.py
+@@ -440 +440,6 @@ def tag_version(repo, latest_tag):
+-    version_choices = ["1. Increment major version", "2. Increment minor version", "3. Increment patch version"]
++    version_choices = [
++        "1. Increment major version",
++        "2. Increment minor version",
++        "3. Increment patch version",
++        "4. Exit without tagging"
++    ]
+@@ -451,0 +457,3 @@ def tag_version(repo, latest_tag):
++    elif version_choice == '4':
++        logger.info(f"{ANSWER_TEXT}Exiting without tagging.{RESET_TEXT}")
++        return
+@@ -453 +461 @@ def tag_version(repo, latest_tag):
+-        logger.error(f"{ERROR_TEXT}Invalid choice. Please enter a number between 1 and 3.{RESET_TEXT}")
++        logger.error(f"{ERROR_TEXT}Invalid choice. Please enter a number between 1 and 4.{RESET_TEXT}")
+@@ -476,0 +485 @@ def tag_version(repo, latest_tag):
++
+```
+
+
 ## 10.0.0 - 2023-10-05
 - this works
 
