@@ -488,9 +488,8 @@ def tag_version(repo, latest_tag):
 #############################################################################################################
 # --- Update the change log ---#
 def update_changelog(version, diff):
-    cwd = os.getcwd()
-    changelog_path = os.path.join(cwd, 'CHANGELOG.md')
-    temp_file = os.path.join(cwd, "CHANGELOG_TEMP.md")
+    changelog_path = 'CHANGELOG.md'
+    temp_file = "CHANGELOG_TEMP.md"
     
     try:
         with open(temp_file, 'w') as temp:
@@ -519,6 +518,7 @@ def update_changelog(version, diff):
         print(f"{ANSWER_TEXT}CHANGELOG.md in the current working directory has been updated with version {version} and associated changes.{RESET_TEXT}")
     except Exception as e:
         print(f"Error updating CHANGELOG.md: {e}")
+
 
 
 
