@@ -1,4 +1,20 @@
 
+## 9.0.0 - 2023-10-05
+- fixed a load of comment
+- looks great now
+
+### Diff:
+```
+diff --git a/fromGE/current/git-helper-16.py b/fromGE/current/git-helper-16.py
+index cae8b22..3bd618c 100644
+--- a/fromGE/current/git-helper-16.py
++++ b/fromGE/current/git-helper-16.py
+@@ -211 +211 @@ def compare_with_origin(repo, branch_name):
+-            messages += f"{ANSWER_TEXT}{UNDERLINE_TEXT}Local branch {branch_name} is ahead of the remote origin by {len(ahead_commits)} commits.{RESET_TEXT}\n"
++            messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}Local branch {branch_name} is ahead of the remote origin by {len(ahead_commits)} commits.{RESET_TEXT}\n"
+```
+
+
 ## 8.0.0 - 2023-10-05
 - fixed repo > Repo
 
