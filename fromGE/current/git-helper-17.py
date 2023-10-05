@@ -341,35 +341,26 @@ def commit_changes(repo):
         for file in files:
             print(file)
 
-    commit_message_input = input(f"{QUESTION_TEXT}Enter a commit message (separate lines with ';', or 'exit' to quit): {RESET_TEXT}").strip()
-    if commit_message_input.lower() == 'exit':
+    commit_message = input(f"{QUESTION_TEXT}Enter a single-line commit message (or 'exit' to quit): {RESET_TEXT}").strip()
+
+    if commit_message.lower() == 'exit':
         logger.info(f"{ANSWER_TEXT}Exiting commit process.{RESET_TEXT}")
         return
 
-    commit_message = commit_message_input.replace(";", "\n")
-
     while not commit_message.strip():
-        commit_message_input = input(f"{ERROR_TEXT}Commit message can't be empty! Please enter a valid commit message (separate lines with ';', or 'exit' to quit): {RESET_TEXT}").strip()
-        if commit_message_input.lower() == 'exit':
+        commit_message = input(f"{ERROR_TEXT}Commit message can't be empty! Please enter a valid single-line commit message (or 'exit' to quit): {RESET_TEXT}").strip()
+        if commit_message.lower() == 'exit':
             logger.info(f"{ANSWER_TEXT}Exiting commit process.{RESET_TEXT}")
             return
-        commit_message = commit_message_input.replace(";", "\n")
-
-    # Write commit message to temporary file and commit
-    with tempfile.NamedTemporaryFile(mode='w+', delete=False) as tmp_file:
-        tmp_file.write(commit_message)
-        tmp_filename = tmp_file.name
 
     try:
-        repo.git.commit('-F', tmp_filename)
-        os.remove(tmp_filename)  # Clean up the temporary file
+        repo.git.commit('-m', commit_message)
         logger.info(f"{ANSWER_TEXT}Staged changes have been committed.{RESET_TEXT}")
     except git.exc.GitCommandError as e:
-        os.remove(tmp_filename)  # Clean up the temporary file
         logger.error(f"{ERROR_TEXT}Error committing changes: {e}{RESET_TEXT}")
     except Exception as e:
-        os.remove(tmp_filename)  # Clean up the temporary file
         logger.error(f"{ERROR_TEXT}An unexpected error occurred: {e}{RESET_TEXT}")
+
 
 #############################################################################################################
 # --- Add files --- #
