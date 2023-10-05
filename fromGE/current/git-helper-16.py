@@ -192,7 +192,7 @@ def compare_with_origin(repo, branch_name):
 
         # If the local branch is behind, show the number and guidance
         if behind_commits:
-            messages += f"{ANSWER_TEXT}Local branch {branch_name} is behind the remote origin by {len(behind_commits)} commits.{RESET_TEXT}\n"
+            messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}Local branch {branch_name} is behind the remote origin by {len(behind_commits)} commits.{RESET_TEXT}\n"
             # List files that are changed in the commits the local branch is behind
             files_to_pull = []
             for commit in behind_commits:
@@ -201,16 +201,20 @@ def compare_with_origin(repo, branch_name):
             files_to_pull = list(set(files_to_pull))  # Remove duplicates
             messages += f"{ANSWER_TEXT}Files on remote to be pulled:\n"
             for file in files_to_pull:
-                messages += f"{OUTPUT_TEXT}  - {file}{RESET_TEXT}\n"
-            messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(1.)PULLING{RESET_TEXT}{HELP_TEXT} the changes from the remote repository.{RESET_TEXT}\n\n"
+                messages += f"{OUTPUT_TEXT}  - {file}{RESET_TEXT}\n\n"
+            messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(1.)PULLING{RESET_TEXT}{HELP_TEXT} the changes from the remote repository.{RESET_TEXT}\n"
+            messages += f"{HELP_TEXT}>    Files exist on the remote repository that you do not have locally.{RESET_TEXT}\n"
+            messages += f"{HELP_TEXT}>    Pulling the files will update your local copy of the repository to match the remote one.{RESET_TEXT}\n\n"
 
         # If the local branch is ahead, show the commits and guidance
         if ahead_commits:
-            messages += f"{ANSWER_TEXT}Local branch {branch_name} is ahead of the remote origin by {len(ahead_commits)} commits.{RESET_TEXT}\n"
+            messages += f"{ANSWER_TEXT}{UNDERLINE_TEXT}Local branch {branch_name} is ahead of the remote origin by {len(ahead_commits)} commits.{RESET_TEXT}\n"
             messages += f"{ANSWER_TEXT}Commits waiting to be pushed:{RESET_TEXT}\n"
             for commit in ahead_commits:
-                messages += f"{OUTPUT_TEXT}{commit.hexsha[:7]} - {commit.author.name}: {commit.summary}{RESET_TEXT}\n"
-            messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(2.)PUSHING{RESET_TEXT}{HELP_TEXT} your commits to synchronize with the remote repository.{RESET_TEXT}\n\n"
+                messages += f"{OUTPUT_TEXT}{commit.hexsha[:7]} - {commit.author.name}: {commit.summary}{RESET_TEXT}\n\n"
+            messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(2.)PUSHING{RESET_TEXT}{HELP_TEXT} your commits to synchronize with the remote repository.{RESET_TEXT}\n"
+            messages += f"{HELP_TEXT}>    Files exist on the local repository that do not exist on the remote one.{RESET_TEXT}\n"
+            messages += f"{HELP_TEXT}>    Pushing the files will update the remote repository to match the local one.{RESET_TEXT}\n\n"
 
         # Get the messages for uncommitted changes and untracked files
         messages += get_uncommitted_changes(repo)
@@ -286,44 +290,17 @@ def commit_changes(repo):
         staged = [item.a_path for item in repo.index.diff('HEAD')]
         return untracked, changed, staged
 
-    def stage_files(stage_all, files_to_stage=None):
-        if stage_all:
-            repo.git.add('.')
-        elif files_to_stage:
-            for file in files_to_stage:
-                if file in untracked_files or file in changed_files:
-                    repo.git.add(file)
-                else:
-                    logger.warning(f"{WARNING_TEXT}File '{file}' does not exist or has no changes. Skipping...{RESET_TEXT}")
-
     untracked_files, changed_files, staged_files = get_changed_files()
 
-    if not untracked_files and not changed_files and not staged_files:
-        logger.info(f"{ANSWER_TEXT}No changes to commit.{RESET_TEXT}")
+    if not staged_files:
+        logger.info(f"{ANSWER_TEXT}No staged changes to commit.{RESET_TEXT}")
         return
 
     # Display the files
-    for category, files in [("Untracked files", untracked_files), ("Modified files", changed_files), ("Staged files", staged_files)]:
+    for category, files in [("Staged files", staged_files)]:
         print(f"{QUESTION_TEXT}{category}:{RESET_TEXT}")
         for file in files:
             print(file)
-
-    while True:
-        stage_decision = input(f"{QUESTION_TEXT}Would you like to stage all changes for commit? (yes/no/exit): {RESET_TEXT}").lower()
-
-        if stage_decision == 'yes':
-            stage_files(True)
-            break
-        elif stage_decision == 'no':
-            files_to_stage = input(f"{QUESTION_TEXT}Enter the names of the files you'd like to stage, separated by spaces (or 'exit' to quit): {RESET_TEXT}").split()
-            if 'exit' in files_to_stage:
-                logger.info(f"{ANSWER_TEXT}Exiting commit process.{RESET_TEXT}")
-                return
-            stage_files(False, files_to_stage)
-            break
-        elif stage_decision == 'exit':
-            logger.info(f"{ANSWER_TEXT}Exiting commit process.{RESET_TEXT}")
-            return
 
     commit_message_input = input(f"{QUESTION_TEXT}Enter a commit message (separate lines with ';', or 'exit' to quit): {RESET_TEXT}").strip()
     commit_message = commit_message_input.replace(";", "\n")
@@ -343,7 +320,7 @@ def commit_changes(repo):
     try:
         repo.git.commit('-F', tmp_filename)
         os.remove(tmp_filename)  # Clean up the temporary file
-        logger.info(f"{ANSWER_TEXT}Uncommitted changes have been committed.{RESET_TEXT}")
+        logger.info(f"{ANSWER_TEXT}Staged changes have been committed.{RESET_TEXT}")
     except git.exc.GitCommandError as e:
         os.remove(tmp_filename)  # Clean up the temporary file
         logger.error(f"{ERROR_TEXT}Error committing changes: {e}{RESET_TEXT}")
@@ -374,40 +351,50 @@ def add_files(repo):
         print(f"{file} ({status})")
 
     while True:
-        user_decision = input(f"{QUESTION_TEXT}Would you like to add all files? (yes/no): {RESET_TEXT}").strip().lower()
+        user_decision = input(f"{QUESTION_TEXT}Would you like to add all files? (yes/no/exit): {RESET_TEXT}").strip().lower()
         
-        try:
-            if user_decision == 'yes':
+        if user_decision == 'yes':
+            try:
                 repo.git.add('-A')
                 logger.info(f"{ANSWER_TEXT}All files added successfully!{RESET_TEXT}")
                 break
-            elif user_decision == 'no':
-                files_to_add = input(f"{QUESTION_TEXT}Enter the names of the files you'd like to add, separated by spaces: {RESET_TEXT}").split()
-                
-                # Check if user provided any filenames
-                if not files_to_add:
-                    logger.warning(f"{WARNING_TEXT}No files provided. Please specify files to add or choose 'yes' to add all.{RESET_TEXT}")
-                    continue
-                
-                # Attempt to add specified files
-                added_any = False
-                for file in files_to_add:
-                    if file in files_to_display:
+            except git.exc.GitCommandError as e:
+                # Handle specific Git errors
+                logger.error(f"{ERROR_TEXT}Error adding files: {e}{RESET_TEXT}")
+
+        elif user_decision == 'no':
+            files_to_add = input(f"{QUESTION_TEXT}Enter the names of the files you'd like to add, separated by spaces: {RESET_TEXT}").split()
+            
+            # Check if user provided any filenames
+            if not files_to_add:
+                logger.warning(f"{WARNING_TEXT}No files provided. Please specify files to add or choose 'yes' to add all.{RESET_TEXT}")
+                continue
+            
+            # Attempt to add specified files
+            added_any = False
+            for file in files_to_add:
+                if file in files_to_display:
+                    try:
                         repo.git.add(file)
                         added_any = True
-                    else:
-                        logger.warning(f"{WARNING_TEXT}File {file} was not in the list and was skipped.{RESET_TEXT}")
+                    except git.exc.GitCommandError as e:
+                        # Handle specific Git errors
+                        logger.error(f"{ERROR_TEXT}Error adding file {file}: {e}{RESET_TEXT}")
+                else:
+                    logger.warning(f"{WARNING_TEXT}File {file} was not in the list and was skipped.{RESET_TEXT}")
 
-                # If we added any files, log success and break out
-                if added_any:
-                    logger.info(f"{ANSWER_TEXT}Selected files have been added.{RESET_TEXT}")
-                    break
-            else:
-                logger.warning(f"{WARNING_TEXT}Invalid input. Please enter 'yes' or 'no'.{RESET_TEXT}")
+            # If we added any files, log success and break out
+            if added_any:
+                logger.info(f"{ANSWER_TEXT}Selected files have been added.{RESET_TEXT}")
+                break
 
-        except git.exc.GitCommandError as e:
-            # Handle specific Git errors
-            logger.error(f"{ERROR_TEXT}Error adding files: {e}{RESET_TEXT}")
+        elif user_decision == 'exit':
+            logger.info(f"{ANSWER_TEXT}Exiting file addition process.{RESET_TEXT}")
+            return
+
+        else:
+            logger.warning(f"{WARNING_TEXT}Invalid input. Please enter 'yes', 'no', or 'exit'.{RESET_TEXT}")
+
 #############################################################################################################
 # --- Get uncommited changes --- #
 def get_uncommitted_changes(repo):
@@ -424,7 +411,7 @@ def get_uncommitted_changes(repo):
 
     if staged_files:
         formatted_staged_files = '\n'.join([f"{OUTPUT_TEXT}  Modified (staged): {file}{RESET_TEXT}" for file in staged_files])
-        messages += f"{ANSWER_TEXT}There are staged changes not yet committed:\n{formatted_staged_files}{RESET_TEXT}\n"
+        messages += f"{ANSWER_TEXT}{UNDERLINE_TEXT}There are uncommited changes:{RESET_TEXT}\n{formatted_staged_files}{RESET_TEXT}\n\n"
         messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(3.)COMMITTING{RESET_TEXT} your changes.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    Files that have been marked for inclusion in the next commit.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    You shouldn't change these files any further.{RESET_TEXT}\n"
@@ -432,23 +419,19 @@ def get_uncommitted_changes(repo):
 
     if unstaged_files:
         formatted_unstaged_files = '\n'.join([f"{OUTPUT_TEXT}  Modified (not staged): {file}{RESET_TEXT}" for file in unstaged_files])
-        messages += f"{ANSWER_TEXT}There are uncommitted changes in the working directory:\n{formatted_unstaged_files}{RESET_TEXT}\n"
-        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(4.)ADDING{RESET_TEXT} the new files to staging.{RESET_TEXT}\n"
-        messages += f"{HELP_TEXT}>    Files that have been changed since the last commit, but not yet staged.{RESET_TEXT}\n"
+        messages += f"{ANSWER_TEXT}{UNDERLINE_TEXT}There are changes to existing files which aren't yet added to staging:{RESET_TEXT}\n{formatted_unstaged_files}{RESET_TEXT}\n\n"
+        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(4.)ADDING{RESET_TEXT} the changed files to staging.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    Already existing files that have been changed since the last commit, but not yet staged.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}>    Only add files that are ready to be staged and then committed to the origin repository.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    When added, the files will be staged where you will then commit them.{RESET_TEXT}\n\n"
 
     if untracked_files:
         formatted_untracked_files = '\n'.join([f"{OUTPUT_TEXT}  New file (untracked): {file}{RESET_TEXT}" for file in untracked_files])
-        messages += f"{ANSWER_TEXT}There are new (untracked) files:\n{formatted_untracked_files}{RESET_TEXT}\n\n"
+        messages += f"{ANSWER_TEXT}{UNDERLINE_TEXT}There are new (untracked) files which aren't yet added to staging:{RESET_TEXT}\n{formatted_untracked_files}{RESET_TEXT}\n\n"
         messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(4.)ADDING{RESET_TEXT} the new files to staging.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    New files that are recognized by Git, but they have not yet been added to staging in preparation for a commit.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    Only add files that are ready to be staged and then committed to the origin repository.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    When added, the files will be staged where you will then commit them.{RESET_TEXT}\n\n"
-
-        
-
-    #if unstaged_files or staged_files or untracked_files:
-    #    messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(4.)ADDING{RESET_TEXT} new files.{RESET_TEXT}\n\n"
 
     return messages
 #############################################################################################################
