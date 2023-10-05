@@ -208,7 +208,7 @@ def compare_with_origin(repo, branch_name):
 
         # If the local branch is ahead, show the commits and guidance
         if ahead_commits:
-            messages += f"{ANSWER_TEXT}{UNDERLINE_TEXT}Local branch {branch_name} is ahead of the remote origin by {len(ahead_commits)} commits.{RESET_TEXT}\n"
+            messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}Local branch {branch_name} is ahead of the remote origin by {len(ahead_commits)} commits.{RESET_TEXT}\n"
             messages += f"{ANSWER_TEXT}Commits waiting to be pushed:{RESET_TEXT}\n"
             for commit in ahead_commits:
                 messages += f"{OUTPUT_TEXT}{commit.hexsha[:7]} - {commit.author.name}: {commit.summary}{RESET_TEXT}\n\n"
