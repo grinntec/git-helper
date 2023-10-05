@@ -158,7 +158,6 @@ def log_options():
         # The name is also converted to lowercase after capitalization to maintain a consistent format
         logger.info(f"{OUTPUT_TEXT}{choice.value}. {choice.name.capitalize().replace('_', ' ').lower()}{RESET_TEXT}")
 
-
 #--- Define a function to prompt the user to enter their choice and return the entered choice ---#
 def get_user_choice():
     # Display a prompt to the user asking them to enter the number corresponding to their choice
@@ -187,7 +186,6 @@ def push_commits(repo, branch_name):
     except Exception as e:
         # Log an error message if any exception occurs during the push operation
         logger.error(f"{ERROR_TEXT}Error pushing commits or tags: {e}{RESET_TEXT}")
-
 
 #--- Define a function to commit all staged changes in the local repository ---#
 def commit_changes(repo):
@@ -221,21 +219,24 @@ def add_files(repo):
         # Log an error message if any exception occurs during the add operation
         logger.error(f"{ERROR_TEXT}Error adding files: {e}{RESET_TEXT}")
 
+#--- Define a function to update the CHANGELOG.md file with the new version and changes ---#
+def update_changelog(version, diff):
+    with open('CHANGELOG.md', 'a') as f:
+        f.write(f"\n## {version} - {datetime.datetime.now().strftime('%Y-%m-%d')}\n")
+        changes = input(f"{QUESTION_TEXT}Enter the changes included in this version (separate multiple changes with commas): {RESET_TEXT}")
+        f.write(', '.join(changes.split(',')) + f"\n\n### Diff:\n```\n{diff}\n```\n")
+    logger.info(f"{ANSWER_TEXT}CHANGELOG.md has been updated with version {version} and associated changes.{RESET_TEXT}")
+
 #--- Define a function to tag a new version of the code in the local repository ---#
 def tag_version(repo, latest_tag):
-    # Parse the latest tag to get the current version, or set it to '0.0.0' if no tags are available
     current_version = VersionInfo.parse(latest_tag if latest_tag != "No tags available" else '0.0.0')
-    
-    # Log the current version and the options to increment major, minor, or patch version
     logger.info(f"{OUTPUT_TEXT}Current version: {ANSWER_TEXT}{current_version}{RESET_TEXT}")
     logger.info(f"{OUTPUT_TEXT}1. Increment major version{RESET_TEXT}")
     logger.info(f"{OUTPUT_TEXT}2. Increment minor version{RESET_TEXT}")
     logger.info(f"{OUTPUT_TEXT}3. Increment patch version{RESET_TEXT}")
-    
-    # Prompt the user to choose an option to increment the version
+
     version_choice = input(f"{QUESTION_TEXT}Enter the number of your choice: {RESET_TEXT}")
-    
-    # Determine the new version based on the user's choice
+
     if version_choice == '1':
         new_version = current_version.bump_major()
     elif version_choice == '2':
@@ -243,22 +244,14 @@ def tag_version(repo, latest_tag):
     elif version_choice == '3':
         new_version = current_version.bump_patch()
     else:
-        # Log an error message and return if the user enters an invalid choice
         logger.error(f"{ERROR_TEXT}Invalid choice. Please enter a number between 1 and 3.{RESET_TEXT}")
         return
-    
-    # Get the diff of the repository and create a new tag with the new version
+
     diff = repo.git.diff('--unified=0')
     repo.create_tag(str(new_version))
     
-    # Open the CHANGELOG.md file and append the new version, date, and changes made in this version
-    with open('CHANGELOG.md', 'a') as f:
-        f.write(f"\n## {new_version} - {datetime.datetime.now().strftime('%Y-%m-%d')}\n")
-        changes = input(f"{QUESTION_TEXT}Enter the changes included in this version (separate multiple changes with commas): {RESET_TEXT}")
-        f.write(', '.join(changes.split(',')) + f"\n\n### Diff:\n```\n{diff}\n```\n")
-    
-    # Log a success message indicating that a new version has been tagged and the changelog has been updated
-    logger.info(f"{ANSWER_TEXT}A new version {new_version} has been tagged and the changelog has been updated.{RESET_TEXT}")
+    # Call the function to update the changelog
+    update_changelog(new_version, diff)
 
 
 # Define the main function to execute the program
@@ -270,31 +263,32 @@ def main():
     # Enter into an infinite loop to continuously prompt the user for choices until the user chooses to exit
     while True:
         # Log the status of the repository by comparing with the origin and log the available options to the user
-        log_status(compare_with_origin(repo, branch_name))
+        comparison_result = compare_with_origin(repo, branch_name)
+        log_status(comparison_result)
         log_options()
-        
-        # Prompt the user to enter their choice
-        user_choice = get_user_choice()
-        
-        # Execute the corresponding function based on the user's choice
-        if user_choice == UserChoice.PUSH.value:
+
+        # Prompt the user for their choice and handle the choice accordingly
+        choice = get_user_choice()
+
+        if choice == UserChoice.PUSH.value:
             push_commits(repo, branch_name)
-        elif user_choice == UserChoice.COMMIT.value:
+        elif choice == UserChoice.COMMIT.value:
             commit_changes(repo)
-        elif user_choice == UserChoice.ADD.value:
+        elif choice == UserChoice.ADD.value:
             add_files(repo)
-        elif user_choice == UserChoice.TAG.value:
+        elif choice == UserChoice.TAG.value:
             tag_version(repo, latest_tag)
-        elif user_choice == UserChoice.EXIT.value:
-            # Exit the program if the user chooses to exit
+            # Re-fetch the latest tag after a new tag has been created
+            latest_tag = str(max(repo.tags, key=lambda t: semver.VersionInfo.parse(t.name)) if repo.tags else "No tags available")
+        elif choice == UserChoice.EXIT.value:
+            logger.info(f"{ANSWER_TEXT}Exiting the program. Goodbye!{RESET_TEXT}")
             sys.exit(0)
         else:
-            # Log an error message if the user enters an invalid choice
-            logger.error(f"{ERROR_TEXT}Invalid choice. Please enter a valid number.{RESET_TEXT}")
-        
-        # Log a separator to organize the console output
+            logger.error(f"{ERROR_TEXT}Invalid choice. Please select a valid option.{RESET_TEXT}")
+
+        # Log a visual separator for better organization in the console
         log_separator()
 
-
+# Execute the main function when the script is run
 if __name__ == "__main__":
     main()
