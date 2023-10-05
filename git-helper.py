@@ -35,8 +35,8 @@ RESET_TEXT = '\033[0m'  # Reset
 PROGRAM_TITLE = "Git Helper"
 PROGRAM_AUTHOR = "Neil Grinnall"
 PROGRAM_HELP_TEXT = "A guided method to using Git"
-PROGRAM_VERSION = "1.0.0"
-PROGRAM_DATE = "2023-10-04"
+PROGRAM_VERSION = "0.0.1"
+PROGRAM_DATE = "2023-10-05"
 
 #--- Define an enumeration class named UserChoice ---#
 class UserChoice(Enum):
@@ -62,7 +62,7 @@ class UserChoice(Enum):
     
     # EXIT represents the choice to exit the application
     EXIT = ('6', 'Exit the application')
-#############################################################################################################
+
 # --- Display a title card --- #
 def display_title(title, author, help_text, version, date):
     """
@@ -93,17 +93,18 @@ def display_title(title, author, help_text, version, date):
     
     # Print the bottom border
     print("+" + "-" * (max_length + 2) + "+")
-#############################################################################################################
+
 # --- Clear the console screen --- #
 def clear_screen():
     """
     Clear the console screen.
     """
     os.system('cls' if os.name == 'nt' else 'clear')
-#############################################################################################################
+
+# --- Ensures the last message is read before continuing --- #
 def prompt_to_continue():
     input("Press enter to continue...")
-#############################################################################################################
+
 #--- Initialize the git repository --- #
 def initialize_repository():
     # Get the current working directory and set it as the repository path
@@ -133,7 +134,7 @@ def initialize_repository():
         
     # Return the Repo object, active branch name, and the latest tag as a string
     return repo, branch_name, str(latest_tag)
-#############################################################################################################
+
 #--- Log information about the repository, branch, and latest tag ---#
 def log_repository_info(repo, branch_name, latest_tag):
     # Log a header for the repository information section
@@ -142,7 +143,7 @@ def log_repository_info(repo, branch_name, latest_tag):
     # Log the current working directory of the repository, the active branch name, and the latest tag
     # The information is highlighted using different text styles for better visibility
     logger.info(f"{OUTPUT_TEXT}You are working in the {ANSWER_TEXT}{repo.working_tree_dir}{OUTPUT_TEXT} repository on the {ANSWER_TEXT}{branch_name}{OUTPUT_TEXT} branch. The latest tag (version) is {ANSWER_TEXT}{latest_tag}{RESET_TEXT}\n")
-#############################################################################################################
+
 #--- Log the status of the repository by displaying the comparison result ---#
 def log_status(comparison_result):
     # Log a header for the status section to separate it visually in the log output
@@ -152,7 +153,7 @@ def log_status(comparison_result):
     # The comparison_result is expected to contain messages about the state of the repository, 
     # such as differences between local and remote, uncommitted changes, untracked files, etc.
     logger.info(comparison_result)
-#############################################################################################################
+
 #--- Log the available options that a user can choose from--- #
 def log_options():
     # Log a header for the options section to visually separate it in the log output
@@ -163,20 +164,20 @@ def log_options():
         # Extract the number and description from the value
         number, description = choice.value
         logger.info(f"{OUTPUT_TEXT}{number}. {description}{RESET_TEXT}")
-#############################################################################################################
+
 #--- Log a visual separator in the console ---#
 def log_separator():
     # Log a series of dashes as a visual separator to organize the console output
     # The separator is highlighted using a specific text style for better visibility
     logger.info(f"{BOLD_TEXT}-----------------------------{RESET_TEXT}\n")
-#############################################################################################################
+
 #--- Prompt the user to enter their choice and return the entered choice ---#
 def get_user_choice():
     # Display a prompt to the user asking them to enter the number corresponding to their choice
     # The prompt is highlighted using a specific text style for better visibility
     # The function then returns the user’s input as a string
     return input(f"\n{QUESTION_TEXT}Enter the number of your choice: {RESET_TEXT}")
-#############################################################################################################
+
 #--- Compare the local repository with the remote origin ---#
 def compare_with_origin(repo, branch_name):
     try:
@@ -224,7 +225,7 @@ def compare_with_origin(repo, branch_name):
     except Exception as e:
         # Return an error message if any exception occurs during the comparison
         return f"{ERROR_TEXT}Error comparing with the origin: {e}{RESET_TEXT}"
-#############################################################################################################
+
 # --- Get uncommited changes --- #
 def get_uncommitted_changes(repo):
     messages = ""
@@ -263,7 +264,7 @@ def get_uncommitted_changes(repo):
         messages += f"{HELP_TEXT}>    When added, the files will be staged where you will then commit them.{RESET_TEXT}\n\n"
 
     return messages
-#############################################################################################################
+
 # --- Pull from origin --- #
 def pull_origin(repo, branch_name):
     try:
@@ -293,7 +294,7 @@ def pull_origin(repo, branch_name):
     except Exception as e:
         # Log an error message if any other exception occurs during the pull operation
         logger.error(f"{ERROR_TEXT}An unexpected error occurred: {e}{RESET_TEXT}")
-#############################################################################################################
+
 # --- Push commits from the local branch to the remote origin ---#
 def push_commits(repo, branch_name):
     try:
@@ -319,7 +320,7 @@ def push_commits(repo, branch_name):
     except Exception as e:
         # Log an error message if any other exception occurs during the push operation
         logger.error(f"{ERROR_TEXT}An unexpected error occurred: {e}{RESET_TEXT}")
-#############################################################################################################
+
 # --- Commit changes --- #
 def commit_changes(repo):
 
@@ -360,7 +361,7 @@ def commit_changes(repo):
         logger.error(f"{ERROR_TEXT}Error committing changes: {e}{RESET_TEXT}")
     except Exception as e:
         logger.error(f"{ERROR_TEXT}An unexpected error occurred: {e}{RESET_TEXT}")
-#############################################################################################################
+
 # --- Add files --- #
 def add_files(repo):
     # Fetching the list of untracked files
@@ -427,7 +428,7 @@ def add_files(repo):
 
         else:
             logger.warning(f"{WARNING_TEXT}Invalid input. Please enter 'yes', 'no', or 'exit'.{RESET_TEXT}")
-#############################################################################################################
+
 # --- Create the tag ---#
 def tag_version(repo, latest_tag):
     if repo.is_dirty():
@@ -482,14 +483,13 @@ def tag_version(repo, latest_tag):
     except git.exc.GitCommandError as e:
         logger.error(f"{ERROR_TEXT}Error pushing tag to remote: {e}{RESET_TEXT}")
 
-
-#############################################################################################################
 # --- Update the change log ---#
 def get_repo_root():
     """Get the root directory of the git repository."""
     repo = Repo(os.getcwd(), search_parent_directories=True)
     return repo.git.rev_parse("--show-toplevel")
 
+# --- Add a diff and comment to the change log --- #
 def update_changelog(version, diff):
     repo_root = get_repo_root()
     changelog_path = os.path.join(repo_root, 'CHANGELOG.md')
@@ -522,12 +522,13 @@ def update_changelog(version, diff):
         print(f"{ANSWER_TEXT}CHANGELOG.md in the repository root has been updated with version {version} and associated changes.{RESET_TEXT}")
     except Exception as e:
         print(f"Error updating CHANGELOG.md: {e}")
-#############################################################################################################
+
+# --- Act based on what the user inputs --- #
 def get_user_choice():
     choice = input("\nEnter the number of your choice: ")
     return choice
-#############################################################################################################
-# Define the main function to execute the program
+
+#--- Define the main function to execute the program --- #
 def main():
     while True:
         clear_screen()
@@ -564,6 +565,6 @@ def main():
         # Only prompt to continue if choice wasn't "Refresh" or "Exit"
         if choice != UserChoice.REFRESH.value[0] and choice != UserChoice.EXIT.value[0]:
             prompt_to_continue()
-#############################################################################################################         
+         
 if __name__ == "__main__":
     main()
