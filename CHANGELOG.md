@@ -1,4 +1,19 @@
 
+## 1.1.0 - 2025-09-19
+- bump to minor
+
+### Diff:
+```
+diff --git a/README.md b/README.md
+index d9e7d99..cc2a4a0 100644
+--- a/README.md
++++ b/README.md
+@@ -3,2 +2,0 @@
+-
+-
+```
+
+
 ## 1.0.6 - 2025-09-19
 - testing the tag
 
