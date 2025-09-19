@@ -31,5 +31,5 @@ def print_section_header(text, color=BOLD_TEXT):
 PROGRAM_TITLE = "Git Helper"
 PROGRAM_AUTHOR = "Neil Grinnall"
 PROGRAM_HELP_TEXT = "A guided method to using Git"
-PROGRAM_VERSION = "0.0.3"
+PROGRAM_VERSION = "1.1.0"
 PROGRAM_DATE = "2025-09"
