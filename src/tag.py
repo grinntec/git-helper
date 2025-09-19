@@ -1,9 +1,16 @@
 # tag.py
 
-from semver import VersionInfo
 from git import Repo, exc
 import os
-
+import sys
+import git
+from git import Repo
+import logging
+import semver
+from semver import VersionInfo
+import datetime
+import tempfile
+import shutil
 from utils import (
     setup_logging,
     get_uncommitted_changes,
