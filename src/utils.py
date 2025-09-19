@@ -4,34 +4,23 @@ from git import Repo, exc
 import semver
 import re
 
-# ANSI escape codes for text colors and reset
-BOLD_TEXT = '\033[1m'
-UNDERLINE_TEXT = '\033[4m'
-QUESTION_TEXT = '\033[96m\033[1m'  # Bold Cyan
-ANSWER_TEXT = '\033[92m'           # Green
-ERROR_TEXT = '\033[91m\033[1m'     # Bold Red
-OUTPUT_TEXT = '\033[97m'           # White
-HELP_TEXT = '\033[90m'             # Grey
-WARNING_TEXT = '\033[93m'          # Yellow
-RESET_TEXT = '\033[0m'             # Reset
-
-# Section header function
-def print_section_header(text, color=BOLD_TEXT):
-    """
-    Print a visually strong section header with underline and color.
-    
-    # Example usage in your CLI script:
-        print_section_header("Repository Information", color=QUESTION_TEXT)
-        print_section_header("Options", color=WARNING_TEXT)
-        print_section_header("Differences between local and origin", color=OUTPUT_TEXT)
-        print_section_header("Error", color=ERROR_TEXT)
-        print_section_header("Guidance", color=HELP_TEXT)
-
-    """
-    line_length = max(32, len(text) + 6)
-    print(f"{color}{'=' * line_length}{RESET_TEXT}")
-    print(f"{color}{text.center(line_length)}{RESET_TEXT}")
-    print(f"{color}{'=' * line_length}{RESET_TEXT}")
+from config import (
+    BOLD_TEXT,
+    UNDERLINE_TEXT,
+    QUESTION_TEXT,
+    ANSWER_TEXT,
+    ERROR_TEXT,
+    OUTPUT_TEXT,
+    HELP_TEXT,
+    WARNING_TEXT,
+    RESET_TEXT,
+    print_section_header,
+    PROGRAM_TITLE,
+    PROGRAM_AUTHOR,
+    PROGRAM_HELP_TEXT,
+    PROGRAM_VERSION,
+    PROGRAM_DATE,
+)
 
 def setup_logging():
     logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -89,7 +78,7 @@ def get_uncommitted_changes(repo):
     if staged_files:
         formatted_staged_files = '\n'.join([f"{OUTPUT_TEXT}  Modified (staged): {file}{RESET_TEXT}" for file in staged_files])
         messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}There are uncommitted changes ready to be committed:{RESET_TEXT}\n{formatted_staged_files}{RESET_TEXT}\n\n"
-        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(3.)COMMITTING{RESET_TEXT} your changes.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(4.)COMMITTING{RESET_TEXT} your changes.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    These files have been added to the staging area and are ready for your next commit.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    You shouldn't change these files any further until you commit them.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    Once committed, these files can be pushed to the origin repository.{RESET_TEXT}\n\n"
@@ -97,7 +86,7 @@ def get_uncommitted_changes(repo):
     if unstaged_files:
         formatted_unstaged_files = '\n'.join([f"{OUTPUT_TEXT}  Modified (not staged): {file}{RESET_TEXT}" for file in unstaged_files])
         messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}There are changes to existing files which aren't yet added to staging:{RESET_TEXT}\n{formatted_unstaged_files}{RESET_TEXT}\n\n"
-        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(4.)ADDING{RESET_TEXT} the changed files to staging.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(3.)ADDING{RESET_TEXT} the changed files to staging.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    These files have been changed since the last commit, but are not yet staged.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    Only add files that are ready to be staged and then committed to the repository.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    When added, the files will be staged and ready to commit.{RESET_TEXT}\n\n"
@@ -105,7 +94,7 @@ def get_uncommitted_changes(repo):
     if untracked_files:
         formatted_untracked_files = '\n'.join([f"{OUTPUT_TEXT}  New file (untracked): {file}{RESET_TEXT}" for file in untracked_files])
         messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}There are new (untracked) files which aren't yet added to staging:{RESET_TEXT}\n{formatted_untracked_files}{RESET_TEXT}\n\n"
-        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(4.)ADDING{RESET_TEXT} the new files to staging.{RESET_TEXT}\n"
+        messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(3.)ADDING{RESET_TEXT} the new files to staging.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    These files are recognized by Git, but are not yet part of version control.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    Only add files that are ready to be staged and then committed to the repository.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    When added, the files will be staged and ready to commit.{RESET_TEXT}\n\n"
