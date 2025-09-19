@@ -56,6 +56,10 @@ from git_commit import (
     git_commit,
 )
 
+from tag import (
+    tag_version,
+)
+
 logger = setup_logging()
 
 def main():
@@ -115,6 +119,10 @@ def main():
         
         elif choice == UserChoice.COMMIT.value[0]:
             git_commit(repo)
+            prompt_to_continue()
+
+        elif choice == UserChoice.TAG.value[0]:
+            tag_version(repo, latest_tag)
             prompt_to_continue()
         
         elif choice == UserChoice.EXIT.value[0]:
