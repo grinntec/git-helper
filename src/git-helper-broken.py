@@ -10,6 +10,13 @@ import tempfile
 import shutil
 
 
+# utils.py
+import logging
+
+# Configure the basic settings for logging
+# Set the logging level to INFO, so it will capture Info, Warning, Error, and Critical messages
+# Format the log messages to display only the actual log message
+logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 
 
@@ -17,73 +24,6 @@ import shutil
 
 
 
-
-
-#--- Initialize the git repository --- #
-def initialize_repository():
-    # Get the current working directory and set it as the repository path
-    repo_path = os.getcwd()
-    
-    try:
-        # Try to create a Repo object for the given repository path
-        # search_parent_directories=True allows searching for a git repository in parent directories
-        repo = git.Repo(repo_path, search_parent_directories=True)
-        
-        # Get the name of the active branch of the repository
-        branch_name = repo.active_branch.name
-        
-        # Get the latest tag in the repository, if available, using semantic versioning
-        # If no tags are available, set to "No tags available"
-        latest_tag = max(repo.tags, key=lambda t: semver.VersionInfo.parse(t.name)) if repo.tags else "No tags available"
-        
-    except git.InvalidGitRepositoryError:
-        # Log an error message and exit if the given path is not a valid git repository
-        logger.error(f"{ERROR_TEXT}Invalid Git repository: {repo_path}{RESET_TEXT}")
-        sys.exit(1)
-        
-    except Exception as e:
-        # Log any other errors encountered during initialization and exit
-        logger.error(f"{ERROR_TEXT}Error initializing repository: {e}{RESET_TEXT}")
-        sys.exit(1)
-        
-    # Return the Repo object, active branch name, and the latest tag as a string
-    return repo, branch_name, str(latest_tag)
-
-#--- Log information about the repository, branch, and latest tag ---#
-def log_repository_info(repo, branch_name, latest_tag):
-    # Log a header for the repository information section
-    logger.info(f"\n{BOLD_TEXT}--- Repository Information ---{RESET_TEXT}")
-    
-    # Log the current working directory of the repository, the active branch name, and the latest tag
-    # The information is highlighted using different text styles for better visibility
-    logger.info(f"{OUTPUT_TEXT}You are working in the {ANSWER_TEXT}{repo.working_tree_dir}{OUTPUT_TEXT} repository on the {ANSWER_TEXT}{branch_name}{OUTPUT_TEXT} branch. The latest tag (version) is {ANSWER_TEXT}{latest_tag}{RESET_TEXT}\n")
-
-#--- Log the status of the repository by displaying the comparison result ---#
-def log_status(comparison_result):
-    # Log a header for the status section to separate it visually in the log output
-    logger.info(f"{BOLD_TEXT}--- Differences between local and origin ---{RESET_TEXT}")
-    
-    # Log the result of the comparison between the local and remote repository
-    # The comparison_result is expected to contain messages about the state of the repository, 
-    # such as differences between local and remote, uncommitted changes, untracked files, etc.
-    logger.info(comparison_result)
-
-#--- Log the available options that a user can choose from--- #
-def log_options():
-    # Log a header for the options section to visually separate it in the log output
-    logger.info(f"\n{BOLD_TEXT}--- Options ---{RESET_TEXT}")
-    
-    # Iterate over each member of the UserChoice enumeration
-    for choice in UserChoice:
-        # Extract the number and description from the value
-        number, description = choice.value
-        logger.info(f"{OUTPUT_TEXT}{number}. {description}{RESET_TEXT}")
-
-#--- Log a visual separator in the console ---#
-def log_separator():
-    # Log a series of dashes as a visual separator to organize the console output
-    # The separator is highlighted using a specific text style for better visibility
-    logger.info(f"{BOLD_TEXT}-----------------------------{RESET_TEXT}\n")
 
 #--- Prompt the user to enter their choice and return the entered choice ---#
 def get_user_choice():
@@ -436,7 +376,29 @@ def update_changelog(version, diff):
         print(f"{ANSWER_TEXT}CHANGELOG.md in the repository root has been updated with version {version} and associated changes.{RESET_TEXT}")
     except Exception as e:
         print(f"Error updating CHANGELOG.md: {e}")
-
+choice = get_user_choice()
+        if choice == UserChoice.REFRESH.value[0]:
+            repo, branch_name, latest_tag = initialize_repository()
+        elif choice == UserChoice.PULL.value[0]:
+            pull_origin(repo, branch_name)
+        elif choice == UserChoice.PUSH.value[0]:
+            push_commits(repo, branch_name)
+        elif choice == UserChoice.COMMIT.value[0]:
+            commit_changes(repo)
+        elif choice == UserChoice.ADD.value[0]:
+            add_files(repo)
+        elif choice == UserChoice.TAG.value[0]:
+            tag_version(repo, latest_tag)
+            latest_tag = str(max(repo.tags, key=lambda t: semver.VersionInfo.parse(t.name)) if repo.tags else "No tags available")
+        elif choice == UserChoice.EXIT.value[0]:
+            logger.info(f"{ANSWER_TEXT}Exiting the program. Goodbye!{RESET_TEXT}")
+            sys.exit(0)
+        else:
+            logger.error(f"{ERROR_TEXT}Invalid choice! Please select a valid option.{RESET_TEXT}")
+        
+        # Only prompt to continue if choice wasn't "Refresh" or "Exit"
+        if choice != UserChoice.REFRESH.value[0] and choice != UserChoice.EXIT.value[0]:
+            prompt_to_continue()
 
 
 #--- Define the main function to execute the program --- #

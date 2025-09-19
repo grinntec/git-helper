@@ -1,5 +1,6 @@
 import os
 from enum import Enum
+import re
 
 # ANSI escape codes for text colors and reset
 BOLD_TEXT = '\033[1m'
@@ -12,75 +13,83 @@ HELP_TEXT = '\033[90m'  # Grey
 WARNING_TEXT = '\033[93m'  # Yellow
 RESET_TEXT = '\033[0m'  # Reset
 
-# Constants
+# Program metadata
 PROGRAM_TITLE = "Git Helper"
 PROGRAM_AUTHOR = "Neil Grinnall"
 PROGRAM_HELP_TEXT = "A guided method to using Git"
 PROGRAM_VERSION = "0.0.2"
 PROGRAM_DATE = "2025-09"
 
-#--- Define an enumeration class named UserChoice ---#
 class UserChoice(Enum):
-    # Each member of this enumeration represents a user choice in the application
-    
-    # REFRESH checks and displays the current status with no actions taken
     REFRESH = ('0', 'REFRESH and display current status')
-    # PULL represents the choice to pull changes from the remote repository
     PULL = ('1', 'PULL changes from remote repository')  
-    # PUSH represents the choice to push changes to the remote repository
     PUSH = ('2', 'PUSH changes to remote repository (into MAIN branch)')    
-    # COMMIT represents the choice to commit changes to the local repository
     COMMIT = ('3', 'COMMIT changes to local repository')
-    # ADD represents the choice to add changes to the staging area
     ADD = ('4', 'ADD changes/files to staging area')    
-    # TAG represents the choice to tag a specific commit
     TAG = ('5', 'TAG the repository')    
-    # EXIT represents the choice to exit the application
-    EXIT = ('6', 'Exit the application')
+    EXIT = ('x', 'Exit the application')
 
-# --- Display a title card --- #
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
 def display_title(title, author, help_text, version, date):
-    """
-    Display a professional-looking title in the console.
-
-    Args:
-    - title (str): The title of the program.
-    - author (str): The author's name.
-    - help_text (str): A brief description of what the program does.
-    - version (str): The version of the program.
-    - date (str): The release or update date.
-    """    
-    # Determine the maximum length for proper formatting
-    max_length = max(len(title), len(author), len(help_text), len(version) + len("Version: "), len(date) + len("Date: "))
-    
-    # Print the top border
+    max_length = max(
+        len(title), len(author), len(help_text),
+        len(version) + len("Version: "), len(date) + len("Date: ")
+    )
     print("+" + "-" * (max_length + 2) + "+")
-    
-    # Print the title, centered
     print("| " + title.center(max_length) + " |")
     print("| " + ("Version: " + version).center(max_length) + " |")
     print("| " + ("Date: " + date).center(max_length) + " |")
     print("| " + ("Author: " + author).center(max_length) + " |")
     print("| " + "-" * max_length + " |")
-    
-    # Print the help text, centered
     print("| " + help_text.center(max_length) + " |")
-    
-    # Print the bottom border
     print("+" + "-" * (max_length + 2) + "+")
 
-# --- Clear the console screen --- #
-def clear_screen():
-    """
-    Clear the console screen.
-    """
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-# --- Ensures the last message is read before continuing --- #
 def prompt_to_continue():
     input("Press enter to continue...")
 
-# --- Act based on what the user inputs --- #
+def log_options():
+    print(f"\n{BOLD_TEXT}Options:{RESET_TEXT}")
+    for choice in UserChoice:
+        number, description = choice.value
+        if ' ' in description:
+            command_word, rest = description.split(' ', 1)
+        else:
+            command_word = description
+            rest = ""
+        print(f"{OUTPUT_TEXT}{number}. {ANSWER_TEXT}{command_word}{OUTPUT_TEXT} {rest}{RESET_TEXT}")
+
+def log_separator():
+    print(f"{BOLD_TEXT}{'-' * 30}{RESET_TEXT}")
+
+def show_error(message):
+    print(f"{ERROR_TEXT}Error: {message}{RESET_TEXT}")
+
+def show_warning(message):
+    print(f"{WARNING_TEXT}Warning: {message}{RESET_TEXT}")
+
 def get_user_choice():
-    choice = input("\nEnter the number of your choice: ")
-    return choice    
+    while True:
+        choice = input(f"\n{QUESTION_TEXT}Enter the number of your choice: {RESET_TEXT}")
+        if choice not in [option.value[0] for option in UserChoice]:
+            print(f"{ERROR_TEXT}Invalid choice. Please try again.{RESET_TEXT}")
+        else:
+            return choice
+
+# --- New: Display repository information in the CLI --- #
+def print_repository_info(repo, branch_name, latest_tag):
+    remote_url = repo.remotes.origin.url
+    org_name, repo_name = get_org_and_repo_name(remote_url)
+    
+    print(f"\n{BOLD_TEXT}--- Repository Information ---{RESET_TEXT}")
+    print(f"{OUTPUT_TEXT}Organization/User: {ANSWER_TEXT}{org_name}{RESET_TEXT}")
+    print(f"{OUTPUT_TEXT}Repository Name:   {ANSWER_TEXT}{repo_name}{RESET_TEXT}")
+    print(f"{OUTPUT_TEXT}Working Directory: {ANSWER_TEXT}{repo.working_tree_dir}{RESET_TEXT}")
+    print(f"{OUTPUT_TEXT}Active Branch:     {ANSWER_TEXT}{branch_name}{RESET_TEXT}")
+    print(f"{OUTPUT_TEXT}Latest Tag:        {ANSWER_TEXT}{latest_tag}{RESET_TEXT}\n")
+
+# --- New: Display status information in the CLI --- #
+def print_status(comparison_result):
+    print(f"{BOLD_TEXT}--- Differences between local and origin ---{RESET_TEXT}")
+    print(comparison_result)
