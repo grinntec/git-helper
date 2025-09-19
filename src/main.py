@@ -40,10 +40,6 @@ from utils import (
     compare_with_origin,
 )
 
-from git_ops import (
-    git_commit,    
-)
-
 from git_pull import (
         git_pull,
 )
@@ -54,6 +50,10 @@ from git_push import (
 
 from git_add import (
     git_add,
+)
+
+from git_commit import (
+    git_commit,
 )
 
 logger = setup_logging()

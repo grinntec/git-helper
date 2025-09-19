@@ -1,3 +1,4 @@
+# git_commit.py
 from git import Repo, exc
 from utils import (
     setup_logging,
@@ -25,7 +26,6 @@ from config import (
 logger = setup_logging()
 
 
-# --- Commit changes --- #
 def git_commit(repo):
 
     def get_changed_files():
