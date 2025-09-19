@@ -1,4 +1,5 @@
-from cli import (
+from display import (
+    print_section_header,
     clear_screen,
     display_title,
     prompt_to_continue,
@@ -17,11 +18,23 @@ from cli import (
     print_status,
 )
 from utils import (
+    print_section_header,
     setup_logging,
     get_repo_root,
     initialize_repository,
     get_org_and_repo_name,
+    get_uncommitted_changes,
+    compare_with_origin,
 )
+
+from git_ops import (
+    git_pull,
+    git_push,
+    git_add,
+    git_commit,    
+)
+
+logger = setup_logging()
 
 def main():
     error_message = None
@@ -30,38 +43,69 @@ def main():
     while True:
         clear_screen()
         display_title(PROGRAM_TITLE, PROGRAM_AUTHOR, PROGRAM_HELP_TEXT, PROGRAM_VERSION, PROGRAM_DATE)
-        
+
         # Repo info
-        repo, branch_name, latest_tag = initialize_repository()
-        print_repository_info(repo, branch_name, latest_tag)
+        try:
+            repo, branch_name, latest_tag = initialize_repository()
+            print_repository_info(repo, branch_name, latest_tag)
+        except Exception as e:
+            logger.error(f"Error initializing repository: {e}")
+            show_error(f"Error initializing repository: {e}")
+            prompt_to_continue()
+            continue
 
         # Status info
-        comparison_result = compare_with_origin(repo, branch_name)
-        print_status(comparison_result)
+        try:
+            comparison_result = compare_with_origin(repo, branch_name)
+            print_status(comparison_result)
+        except Exception as e:
+            logger.error(f"Error comparing with origin: {e}")
+            show_error(f"Error comparing with origin: {e}")
 
         log_options()
         log_separator()
 
         if warning_message:
             show_warning(warning_message)
+            logger.warning(warning_message)
             warning_message = None
 
         if error_message:
             show_error(error_message)
+            logger.error(error_message)
             error_message = None
 
         choice = get_user_choice()
-        if choice == UserChoice.EXIT.value[0]:
+        if choice == UserChoice.REFRESH.value[0]:
+            repo, branch_name, latest_tag = initialize_repository()
+        
+        elif choice == UserChoice.PULL.value[0]:
+            git_pull(repo, branch_name)
+            prompt_to_continue()
+        
+        elif choice == UserChoice.PUSH.value[0]:
+            git_push(repo, branch_name)
+            prompt_to_continue()
+
+        elif choice == UserChoice.ADD.value[0]:
+            git_add(repo)
+            prompt_to_continue()
+        
+        elif choice == UserChoice.COMMIT.value[0]:
+            git_commit(repo)
+            prompt_to_continue()
+        
+        
+        
+        
+        
+        
+        
+        elif choice == UserChoice.EXIT.value[0]:
+            logger.info("Exiting the application. Goodbye!")
             print("Exiting the application. Goodbye!")
             break
 
-        # In a real app, set error/warning after actual git actions
-        if choice == UserChoice.PULL.value[0]:
-            warning_message = "Remote branch is ahead, consider pulling."
-        elif choice == UserChoice.COMMIT.value[0]:
-            error_message = "No staged changes to commit."
-
-        prompt_to_continue()
 
 if __name__ == "__main__":
     main()

@@ -181,102 +181,11 @@ def get_user_choice():
 
 
 
-# --- Pull from origin --- #
-def pull_origin(repo, branch_name):
-    try:
-        # Fetch the latest changes from the remote origin
-        repo.remotes.origin.fetch()
 
-        # Check if there are any new commits on the remote branch that aren't on the local branch
-        commits_behind = list(repo.iter_commits(f'{branch_name}..origin/{branch_name}'))
-        
-        if commits_behind:
-            # Merge the changes from the remote branch into the local branch
-            repo.git.pull('origin', branch_name)
-            
-            # Log a success message if the pull operation is successful
-            logger.info(f"{ANSWER_TEXT}Successfully pulled changes from the remote origin to the local {branch_name} branch.{RESET_TEXT}")
-        else:
-            # Log a message indicating the local branch is already up to date with the remote branch
-            logger.info(f"{ANSWER_TEXT}The local {branch_name} branch is already up to date with the remote origin.{RESET_TEXT}")
 
-    except git.exc.GitCommandError as e:
-        # Handle specific Git errors, like merge conflicts
-        if 'fix conflicts' in str(e):
-            logger.error(f"{ERROR_TEXT}Merge conflict detected! Please resolve the conflicts manually and then commit the changes.{RESET_TEXT}")
-        else:
-            logger.error(f"{ERROR_TEXT}Error pulling changes from the origin: {e}{RESET_TEXT}")
 
-    except Exception as e:
-        # Log an error message if any other exception occurs during the pull operation
-        logger.error(f"{ERROR_TEXT}An unexpected error occurred: {e}{RESET_TEXT}")
 
-# --- Push commits from the local branch to the remote origin ---#
-def push_commits(repo, branch_name):
-    try:
-        # Check for unpushed commits
-        commits_ahead = list(repo.iter_commits(f'origin/{branch_name}..{branch_name}'))
 
-        # If there are unpushed commits, push them to the remote
-        if commits_ahead:
-            # Attempt to push commits from the specified local branch to the corresponding remote branch on the origin
-            repo.git.push('origin', branch_name)
-            logger.info(f"{ANSWER_TEXT}Unpushed commits have been pushed to the origin.{RESET_TEXT}")
-        else:
-            # Log a message indicating there were no unpushed commits
-            logger.info(f"{ANSWER_TEXT}No unpushed commits to push to the origin.{RESET_TEXT}")
-
-    except git.exc.GitCommandError as e:
-        # Handle specific Git errors, suggesting pull if push is rejected
-        if 'rejected' in str(e):
-            logger.error(f"{ERROR_TEXT}Push was rejected. Consider pulling changes first and then try pushing again.{RESET_TEXT}")
-        else:
-            logger.error(f"{ERROR_TEXT}Error pushing commits: {e}{RESET_TEXT}")
-
-    except Exception as e:
-        # Log an error message if any other exception occurs during the push operation
-        logger.error(f"{ERROR_TEXT}An unexpected error occurred: {e}{RESET_TEXT}")
-
-# --- Commit changes --- #
-def commit_changes(repo):
-
-    def get_changed_files():
-        untracked = repo.untracked_files
-        changed = [item.a_path for item in repo.index.diff(None)]
-        staged = [item.a_path for item in repo.index.diff('HEAD')]
-        return untracked, changed, staged
-
-    untracked_files, changed_files, staged_files = get_changed_files()
-
-    if not staged_files:
-        logger.info(f"{ANSWER_TEXT}No staged changes to commit.{RESET_TEXT}")
-        return
-
-    # Display the files
-    for category, files in [("Staged files", staged_files)]:
-        print(f"{QUESTION_TEXT}{category}:{RESET_TEXT}")
-        for file in files:
-            print(file)
-
-    commit_message = input(f"{QUESTION_TEXT}Enter a single-line commit message (or 'exit' to quit): {RESET_TEXT}").strip()
-
-    if commit_message.lower() == 'exit':
-        logger.info(f"{ANSWER_TEXT}Exiting commit process.{RESET_TEXT}")
-        return
-
-    while not commit_message.strip():
-        commit_message = input(f"{ERROR_TEXT}Commit message can't be empty! Please enter a valid single-line commit message (or 'exit' to quit): {RESET_TEXT}").strip()
-        if commit_message.lower() == 'exit':
-            logger.info(f"{ANSWER_TEXT}Exiting commit process.{RESET_TEXT}")
-            return
-
-    try:
-        repo.git.commit('-m', commit_message)
-        logger.info(f"{ANSWER_TEXT}Staged changes have been committed.{RESET_TEXT}")
-    except git.exc.GitCommandError as e:
-        logger.error(f"{ERROR_TEXT}Error committing changes: {e}{RESET_TEXT}")
-    except Exception as e:
-        logger.error(f"{ERROR_TEXT}An unexpected error occurred: {e}{RESET_TEXT}")
 
 # --- Add files --- #
 def add_files(repo):

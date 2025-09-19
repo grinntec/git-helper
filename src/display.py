@@ -47,8 +47,8 @@ class UserChoice(Enum):
     REFRESH = ('0', 'REFRESH and display current status')
     PULL = ('1', 'PULL changes from remote repository')  
     PUSH = ('2', 'PUSH changes to remote repository (into MAIN branch)')    
-    COMMIT = ('3', 'COMMIT changes to local repository')
-    ADD = ('4', 'ADD changes/files to staging area')    
+    ADD = ('3', 'ADD changes/files to staging area')    
+    COMMIT = ('4', 'COMMIT changes to local repository')
     TAG = ('5', 'TAG the repository')    
     EXIT = ('x', 'Exit the application')
 
