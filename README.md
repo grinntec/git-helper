@@ -1,4 +1,4 @@
-[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/OWNER/REPO?sort=semver)](https://github.com/grinntec/git-helper/tags)
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/OWNER/REPO?sort=semver)](https://github.com/grinntec/git-helper.git/tags)
 
 
 # Git Helper
