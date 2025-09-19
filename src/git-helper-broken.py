@@ -337,68 +337,7 @@ def tag_version(repo, latest_tag):
     except git.exc.GitCommandError as e:
         logger.error(f"{ERROR_TEXT}Error pushing tag to remote: {e}{RESET_TEXT}")
 
-# --- Update the change log ---#
-def get_repo_root():
-    """Get the root directory of the git repository."""
-    repo = Repo(os.getcwd(), search_parent_directories=True)
-    return repo.git.rev_parse("--show-toplevel")
 
-# --- Add a diff and comment to the change log --- #
-def update_changelog(version, diff):
-    repo_root = get_repo_root()
-    changelog_path = os.path.join(repo_root, 'CHANGELOG.md')
-    temp_file = os.path.join(repo_root, "CHANGELOG_TEMP.md")
-    
-    try:
-        with open(temp_file, 'w') as temp:
-            # Check if CHANGELOG.md exists in the repo root
-            if os.path.exists(changelog_path):
-                with open(changelog_path, 'r') as original:
-                    # Write the new changelog entry at the top
-                    temp.write(f"\n## {version} - {datetime.datetime.now().strftime('%Y-%m-%d')}\n")
-                    
-                    # Ask for changes with a semicolon delimiter
-                    changes_input = input(f"{QUESTION_TEXT}Enter the changes included in this version (separate multiple changes with ';'): {RESET_TEXT}")
-                    changes = changes_input.split(';')
-                    
-                    for change in changes:
-                        temp.write(f"- {change.strip()}\n")
-                    temp.write(f"\n### Diff:\n```\n{diff}\n```\n\n")
-                    
-                    # Copy the rest of the original changelog
-                    temp.write(original.read())
-            else:
-                print(f"{ANSWER_TEXT}CHANGELOG.md not found in the repository root. Creating a new one.{RESET_TEXT}")
-                temp.write(f"\n## {version} - {datetime.datetime.now().strftime('%Y-%m-%d')}\n")
-        
-        # Replace the original changelog with the temporary one
-        shutil.move(temp_file, changelog_path)
-        print(f"{ANSWER_TEXT}CHANGELOG.md in the repository root has been updated with version {version} and associated changes.{RESET_TEXT}")
-    except Exception as e:
-        print(f"Error updating CHANGELOG.md: {e}")
-choice = get_user_choice()
-        if choice == UserChoice.REFRESH.value[0]:
-            repo, branch_name, latest_tag = initialize_repository()
-        elif choice == UserChoice.PULL.value[0]:
-            pull_origin(repo, branch_name)
-        elif choice == UserChoice.PUSH.value[0]:
-            push_commits(repo, branch_name)
-        elif choice == UserChoice.COMMIT.value[0]:
-            commit_changes(repo)
-        elif choice == UserChoice.ADD.value[0]:
-            add_files(repo)
-        elif choice == UserChoice.TAG.value[0]:
-            tag_version(repo, latest_tag)
-            latest_tag = str(max(repo.tags, key=lambda t: semver.VersionInfo.parse(t.name)) if repo.tags else "No tags available")
-        elif choice == UserChoice.EXIT.value[0]:
-            logger.info(f"{ANSWER_TEXT}Exiting the program. Goodbye!{RESET_TEXT}")
-            sys.exit(0)
-        else:
-            logger.error(f"{ERROR_TEXT}Invalid choice! Please select a valid option.{RESET_TEXT}")
-        
-        # Only prompt to continue if choice wasn't "Refresh" or "Exit"
-        if choice != UserChoice.REFRESH.value[0] and choice != UserChoice.EXIT.value[0]:
-            prompt_to_continue()
 
 
 #--- Define the main function to execute the program --- #

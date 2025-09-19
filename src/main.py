@@ -58,6 +58,8 @@ from git_commit import (
 
 from tag import (
     tag_version,
+    get_repo_root,
+    update_changelog,
 )
 
 logger = setup_logging()
