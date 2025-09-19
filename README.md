@@ -1,7 +1,5 @@
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/grinntec/git-helper?sort=semver)](https://github.com/grinntec/git-helper/tags)
 
-
-
 # Git Helper
 
 `git-helper.py` is a Python script designed to assist with common Git operations.
