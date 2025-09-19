@@ -2,6 +2,7 @@
 
 from semver import VersionInfo
 from git import Repo, exc
+import os
 
 from utils import (
     setup_logging,
