@@ -57,6 +57,7 @@ from git_commit import (
 )
 
 from tag import (
+    get_user_choice,
     tag_version,
     get_repo_root,
     update_changelog,

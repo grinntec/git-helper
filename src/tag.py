@@ -29,6 +29,13 @@ from config import (
 
 logger = setup_logging()
 
+#--- Prompt the user to enter their choice and return the entered choice ---#
+def get_user_choice():
+    # Display a prompt to the user asking them to enter the number corresponding to their choice
+    # The prompt is highlighted using a specific text style for better visibility
+    # The function then returns the user’s input as a string
+    return input(f"\n{QUESTION_TEXT}Enter the number of your choice: {RESET_TEXT}")
+
 def tag_version(repo, latest_tag):
     if repo.is_dirty():
         logger.error(f"{ERROR_TEXT}Uncommitted changes detected. Please commit your changes before tagging a new version.{RESET_TEXT}")
