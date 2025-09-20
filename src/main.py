@@ -1,3 +1,5 @@
+import os
+
 from config import (
     BOLD_TEXT,
     UNDERLINE_TEXT,
@@ -143,8 +145,13 @@ def main():
             prompt_to_continue()
         
         elif choice == UserChoice.INIT.value[0]:
+            local_path = input(f"{QUESTION_TEXT}Enter the path to your local project directory: {RESET_TEXT}").strip()
+            if not local_path or not os.path.isdir(local_path):
+                show_error(f"Directory '{local_path}' does not exist.")
+                prompt_to_continue()
+                continue
             origin_url = prompt_for_origin()
-            init_git_repo(origin_url)
+            init_git_repo(local_path, origin_url)
             prompt_to_continue()
         
         elif choice == UserChoice.EXIT.value[0]:
