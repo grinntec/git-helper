@@ -1,4 +1,35 @@
 
+## 1.1.2 - 2025-09-20
+- fix error with order of main
+
+### Diff:
+```
+diff --git a/main.py b/main.py
+index 56ceb3b..82f43fb 100644
+--- a/main.py
++++ b/main.py
+@@ -64,3 +63,0 @@ def main():
+-    error_message = None
+-    warning_message = None
+-
+@@ -67,0 +65,4 @@ def main():
++        # Ensure these are always initialized at the start of each loop
++        error_message = None
++        warning_message = None
++
+@@ -71 +71,0 @@ def main():
+-        # Try to initialize repo
+@@ -98 +98 @@ def main():
+-            continue  # Next loop iteration
++            continue
+@@ -100 +100 @@ def main():
+-        # (continue as before with the full menu if inside a repo)
++        # Repo is valid, show full menu
+@@ -108 +107,0 @@ def main():
+-
+```
+
+
 ## 1.1.1 - 2025-09-20
 - fix non repo error
 
