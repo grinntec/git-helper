@@ -63,6 +63,10 @@ from tag import (
     update_changelog,
 )
 
+from git_init import (
+    create_project_structure,
+)
+
 logger = setup_logging()
 
 def main():
@@ -126,6 +130,10 @@ def main():
 
         elif choice == UserChoice.TAG.value[0]:
             tag_version(repo, latest_tag)
+            prompt_to_continue()
+        
+        elif choice == UserChoice.INIT.value[0]:
+            git_init_push()
             prompt_to_continue()
         
         elif choice == UserChoice.EXIT.value[0]:

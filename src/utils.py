@@ -77,7 +77,7 @@ def get_uncommitted_changes(repo):
 
     if staged_files:
         formatted_staged_files = '\n'.join([f"{OUTPUT_TEXT}  Modified (staged): {file}{RESET_TEXT}" for file in staged_files])
-        messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}There are uncommitted changes ready to be committed:{RESET_TEXT}\n{formatted_staged_files}{RESET_TEXT}\n\n"
+        messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}Changes ready to be committed:{RESET_TEXT}\n{formatted_staged_files}{RESET_TEXT}\n\n"
         messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(4.)COMMITTING{RESET_TEXT} your changes.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    These files have been added to the staging area and are ready for your next commit.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    You shouldn't change these files any further until you commit them.{RESET_TEXT}\n"
@@ -85,7 +85,7 @@ def get_uncommitted_changes(repo):
 
     if unstaged_files:
         formatted_unstaged_files = '\n'.join([f"{OUTPUT_TEXT}  Modified (not staged): {file}{RESET_TEXT}" for file in unstaged_files])
-        messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}There are changes to existing files which aren't yet added to staging:{RESET_TEXT}\n{formatted_unstaged_files}{RESET_TEXT}\n\n"
+        messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}Files not yet added to staging:{RESET_TEXT}\n{formatted_unstaged_files}{RESET_TEXT}\n\n"
         messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(3.)ADDING{RESET_TEXT} the changed files to staging.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    These files have been changed since the last commit, but are not yet staged.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    Only add files that are ready to be staged and then committed to the repository.{RESET_TEXT}\n"
@@ -93,7 +93,7 @@ def get_uncommitted_changes(repo):
 
     if untracked_files:
         formatted_untracked_files = '\n'.join([f"{OUTPUT_TEXT}  New file (untracked): {file}{RESET_TEXT}" for file in untracked_files])
-        messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}There are new (untracked) files which aren't yet added to staging:{RESET_TEXT}\n{formatted_untracked_files}{RESET_TEXT}\n\n"
+        messages += f"\n{ANSWER_TEXT}{UNDERLINE_TEXT}Untracked files not yet added to staging:{RESET_TEXT}\n{formatted_untracked_files}{RESET_TEXT}\n\n"
         messages += f"{HELP_TEXT}Guidance: Consider {WARNING_TEXT}(3.)ADDING{RESET_TEXT} the new files to staging.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    These files are recognized by Git, but are not yet part of version control.{RESET_TEXT}\n"
         messages += f"{HELP_TEXT}>    Only add files that are ready to be staged and then committed to the repository.{RESET_TEXT}\n"

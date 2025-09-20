@@ -33,6 +33,7 @@ class UserChoice(Enum):
     ADD = ('3', 'ADD changes/files to staging area')    
     COMMIT = ('4', 'COMMIT changes to local repository')
     TAG = ('5', 'TAG the repository')    
+    INIT = ('6', 'Init a new repo and push it to GitHub')
     EXIT = ('x', 'Exit the application')
 
 def clear_screen():
@@ -56,7 +57,7 @@ def prompt_to_continue():
     input("Press enter to continue...")
 
 def log_options():
-    print_section_header("Options", color=WARNING_TEXT)
+    print_section_header("Choices", color=WARNING_TEXT)
     for choice in UserChoice:
         number, description = choice.value
         if ' ' in description:
