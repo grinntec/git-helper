@@ -4,7 +4,7 @@ from git import Repo, exc
 import semver
 import re
 
-from config import (
+from src.config import (
     BOLD_TEXT,
     UNDERLINE_TEXT,
     QUESTION_TEXT,

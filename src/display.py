@@ -2,13 +2,13 @@ import os
 from enum import Enum
 import re
 
-from utils import ( 
+from src.utils import ( 
     get_org_and_repo_name,
     get_uncommitted_changes,
     compare_with_origin
 )
 
-from config import (
+from src.config import (
     BOLD_TEXT,
     UNDERLINE_TEXT,
     QUESTION_TEXT,

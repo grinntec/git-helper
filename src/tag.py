@@ -11,12 +11,13 @@ from semver import VersionInfo
 import datetime
 import tempfile
 import shutil
-from utils import (
+
+from src.utils import (
     setup_logging,
     get_uncommitted_changes,
 )
 
-from config import (
+from src.config import (
     BOLD_TEXT,
     UNDERLINE_TEXT,
     QUESTION_TEXT,

@@ -1,6 +1,6 @@
 import os
 
-from config import (
+from src.config import (
     BOLD_TEXT,
     UNDERLINE_TEXT,
     QUESTION_TEXT,
@@ -18,7 +18,7 @@ from config import (
     PROGRAM_DATE,
 )
 
-from display import (
+from src.display import (
     clear_screen,
     display_title,
     prompt_to_continue,
@@ -32,7 +32,7 @@ from display import (
     print_status,
 )
 
-from utils import (
+from src.utils import (
     print_section_header,
     setup_logging,
     get_repo_root,
@@ -42,37 +42,20 @@ from utils import (
     compare_with_origin,
 )
 
-from git_pull import (
-        git_pull,
-)
-
-from git_push import (
-    git_push,
-)
-
-from git_add import (
-    git_add,
-)
-
-from git_commit import (
-    git_commit,
-)
-
-from tag import (
+from src.git_pull import git_pull
+from src.git_push import git_push
+from src.git_add import git_add
+from src.git_commit import git_commit
+from src.tag import (
     get_user_choice,
     tag_version,
     get_repo_root,
     update_changelog,
 )
-
-from create_project import (
-    simple_project_init,
-)
-
-from git_init import (
+from src.create_project import simple_project_init
+from src.git_init import (
     prompt_for_origin,
     init_git_repo,
-    main,
 )
 
 logger = setup_logging()
@@ -156,9 +139,7 @@ def main():
         
         elif choice == UserChoice.EXIT.value[0]:
             logger.info("Exiting the application. Goodbye!")
-            #print("Exiting the application. Goodbye!")
             break
-
 
 if __name__ == "__main__":
     main()

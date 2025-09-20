@@ -1,6 +1,6 @@
 import os
 import subprocess
-from config import (
+from src.config import (
     QUESTION_TEXT,
     ANSWER_TEXT,
     ERROR_TEXT,
@@ -8,7 +8,7 @@ from config import (
     RESET_TEXT,
     print_section_header,
 )
-from create_project import simple_project_init
+from src.create_project import simple_project_init
 
 def prompt_for_origin():
     print_section_header("GitHub Remote Setup")

@@ -1,7 +1,7 @@
 # create_project.py
 import os
 from datetime import datetime
-from config import (
+from src.config import (
     QUESTION_TEXT,
     ANSWER_TEXT,
     ERROR_TEXT,
