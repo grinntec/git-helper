@@ -50,9 +50,11 @@ def initialize_repository():
         else:
             latest_tag_str = "No tags available"
     except exc.InvalidGitRepositoryError:
-        raise Exception(f"Invalid Git repository: {repo_path}")
+        # Instead of raising, return None values
+        return None, None, None
     except Exception as e:
-        raise Exception(f"Error initializing repository: {e}")
+        # Also return None values for other errors
+        return None, None, None
     return repo, branch_name, latest_tag_str
 
 def get_org_and_repo_name(remote_url):

@@ -68,17 +68,37 @@ def main():
         clear_screen()
         display_title(PROGRAM_TITLE, PROGRAM_AUTHOR, PROGRAM_HELP_TEXT, PROGRAM_VERSION, PROGRAM_DATE)
 
-        # Repo info
-        try:
-            repo, branch_name, latest_tag = initialize_repository()
-            print_repository_info(repo, branch_name, latest_tag)
-        except Exception as e:
-            logger.error(f"Error initializing repository: {e}")
-            show_error(f"Error initializing repository: {e}")
-            prompt_to_continue()
-            continue
+        # Try to initialize repo
+        repo, branch_name, latest_tag = initialize_repository()
+        if repo is None:
+            show_warning("You are not in a Git repository. Only project creation and repository initialization are available.")
+            log_separator()
+            print(f"{OUTPUT_TEXT}1. Create a new Git Project{RESET_TEXT}")
+            print(f"{OUTPUT_TEXT}2. Initialize a new Git Repository{RESET_TEXT}")
+            print(f"{OUTPUT_TEXT}x. Exit the application{RESET_TEXT}")
+            choice = input(f"\n{QUESTION_TEXT}Enter your choice: {RESET_TEXT}").strip()
+            if choice == '1':
+                simple_project_init()
+                prompt_to_continue()
+            elif choice == '2':
+                local_path = input(f"{QUESTION_TEXT}Enter the path to your local project directory: {RESET_TEXT}").strip()
+                if not local_path or not os.path.isdir(local_path):
+                    show_error(f"Directory '{local_path}' does not exist.")
+                    prompt_to_continue()
+                    continue
+                origin_url = prompt_for_origin()
+                init_git_repo(local_path, origin_url)
+                prompt_to_continue()
+            elif choice == 'x':
+                logger.info("Exiting the application. Goodbye!")
+                break
+            else:
+                show_error("Invalid choice. Please try again.")
+                prompt_to_continue()
+            continue  # Next loop iteration
 
-        # Status info
+        # (continue as before with the full menu if inside a repo)
+        print_repository_info(repo, branch_name, latest_tag)
         try:
             comparison_result = compare_with_origin(repo, branch_name)
             print_status(comparison_result)
@@ -102,11 +122,11 @@ def main():
         choice = get_user_choice()
         if choice == UserChoice.REFRESH.value[0]:
             repo, branch_name, latest_tag = initialize_repository()
-        
+
         elif choice == UserChoice.PULL.value[0]:
             git_pull(repo, branch_name)
             prompt_to_continue()
-        
+
         elif choice == UserChoice.PUSH.value[0]:
             git_push(repo, branch_name)
             prompt_to_continue()
@@ -114,7 +134,7 @@ def main():
         elif choice == UserChoice.ADD.value[0]:
             git_add(repo)
             prompt_to_continue()
-        
+
         elif choice == UserChoice.COMMIT.value[0]:
             git_commit(repo)
             prompt_to_continue()
@@ -122,11 +142,11 @@ def main():
         elif choice == UserChoice.TAG.value[0]:
             tag_version(repo, latest_tag)
             prompt_to_continue()
-        
+
         elif choice == UserChoice.CREATE.value[0]:
             simple_project_init()
             prompt_to_continue()
-        
+
         elif choice == UserChoice.INIT.value[0]:
             local_path = input(f"{QUESTION_TEXT}Enter the path to your local project directory: {RESET_TEXT}").strip()
             if not local_path or not os.path.isdir(local_path):
@@ -136,7 +156,7 @@ def main():
             origin_url = prompt_for_origin()
             init_git_repo(local_path, origin_url)
             prompt_to_continue()
-        
+
         elif choice == UserChoice.EXIT.value[0]:
             logger.info("Exiting the application. Goodbye!")
             break
