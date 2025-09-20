@@ -2,45 +2,106 @@
 
 # Git Helper
 
-`git-helper.py` is a Python script designed to assist with common Git operations.
+`git-helper` is a user-friendly tool for guided Git operations, designed to simplify everyday workflows for both beginners and experienced developers.
 
-## Overview
-
-The script provides a set of functions to automate and simplify various Git tasks. It's designed to be user-friendly and can be easily integrated into any development workflow.
+---
 
 ## Features
 
-- **Initialize a Git Repository**: Quickly set up a new Git repository with essential configurations.
-- **Add Files**: Add specific files or all changes to the staging area.
-- **Commit Changes**: Commit the staged changes with a custom message.
-- **Push Changes**: Push the committed changes to the remote repository.
-- **Pull Changes**: Fetch and merge changes from the remote repository.
-- **Clone a Repository**: Clone a remote Git repository to your local machine.
-- **Check Status**: View the current status of your Git repository, including changes not yet staged or committed.
+- **Initialize a Git Repository**: Set up a new Git repository with essential configuration, using `main` as the default branch.
+- **Add Files**: Stage new or modified files interactively.
+- **Commit Changes**: Commit staged changes with a custom message.
+- **Push/Pull Changes**: Synchronize your local repository with the remote.
+- **Clone a Repository**: Clone remote repositories to your machine.
+- **Check Status**: View status, uncommitted changes, and branch differences.
+- **Tag and Release**: Create semantic version tags and update changelogs.
+- **Project Creation**: Scaffold a new Python project structure.
 
-  ![image](https://github.com/grinntec/git-helper/assets/40019507/52835528-47c8-4cdc-b59f-a9a047f93315)
+---
 
-## Compiling the Python File into a Binary using PyInstaller
+## Installation
 
-To compile the Python file into a binary, you can use PyInstaller. PyInstaller bundles a Python application and all its dependencies into a single package. Follow the steps below to compile the Python file:
+### Option 1: Run from Source (Python 3.10+)
 
-Install PyInstaller:
-```sh
-pip install pyinstaller
-```
+1. **Clone the repository**
+    ```sh
+    git clone https://github.com/grinntec/git-helper.git
+    cd git-helper
+    ```
 
-Navigate to the directory containing your Python file and run the following command:
+2. **Install dependencies**
+    ```sh
+    pip install -r requirements.txt
+    ```
 
-```sh
-pyinstaller --onefile your_python_file.py
-```
+3. **Run the helper**
+    ```sh
+    python main.py
+    ```
 
-After running the command, PyInstaller will create a dist directory in the same folder as your Python file. Inside the dist directory, you will find the compiled binary file.
+---
 
-You can now run the binary file without needing a Python interpreter or any dependencies.
+### Option 2: Install the Prebuilt Binary (Windows 11)
+
+You do **not** need Python or any extra dependencies!
+
+1. **Download the binary**
+    - Visit [GitHub Releases](https://github.com/grinntec/git-helper/releases)
+    - Download `git-helper.exe` from the latest release.
+
+2. **(Optional) Move to a convenient folder**
+    - E.g. `C:\Program Files\git-helper\`
+
+3. **(Optional) Add to your system PATH**
+    - Open "Edit environment variables for your account"
+    - Add the folder (e.g. `C:\Program Files\git-helper\`) to the `Path` variable.
+    - Click OK and restart your terminal.
+
+4. **Run the binary**
+    - From anywhere in CMD/PowerShell (if on PATH):
+        ```sh
+        git-helper.exe
+        ```
+    - Or navigate to the folder and run:
+        ```sh
+        cd "C:\Program Files\git-helper"
+        .\git-helper.exe
+        ```
+
+**Uninstall:**  
+Delete `git-helper.exe` and remove its folder from PATH if added.
+
+---
+
+## Building the Binary Yourself (Advanced)
+
+1. **Install PyInstaller**
+    ```sh
+    pip install pyinstaller
+    ```
+
+2. **Build the binary**
+    ```sh
+    pyinstaller --onefile main.py --name git-helper
+    ```
+    The binary will be created in the `dist/` folder.
+
+3. **Distribute or install as above!**
+
+---
 
 ## Usage
-Run the compiled binary or the Python file directly, and follow the on-screen prompts to perform Git operations.
+
+Start the tool and follow the on-screen prompts to perform common Git operations interactively.
+
+---
 
 ## License
-This project is licensed under the MIT License - see the LICENSE.md file for details.
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## Support & Feedback
+
+If you have issues or feature requests, please [open an issue](https://github.com/grinntec/git-helper/issues).
