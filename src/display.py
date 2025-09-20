@@ -33,7 +33,8 @@ class UserChoice(Enum):
     ADD = ('3', 'ADD changes/files to staging area')    
     COMMIT = ('4', 'COMMIT changes to local repository')
     TAG = ('5', 'TAG the repository')    
-    INIT = ('6', 'Init a new repo and push it to GitHub')
+    CREATE = ('6', 'Create a new Git Project')
+    INIT = ('7', 'Initialize a new Git Repository')
     EXIT = ('x', 'Exit the application')
 
 def clear_screen():

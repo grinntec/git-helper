@@ -63,8 +63,14 @@ from tag import (
     update_changelog,
 )
 
+from create_project import (
+    simple_project_init,
+)
+
 from git_init import (
-    create_project_structure,
+    prompt_for_origin,
+    init_git_repo,
+    main,
 )
 
 logger = setup_logging()
@@ -132,13 +138,18 @@ def main():
             tag_version(repo, latest_tag)
             prompt_to_continue()
         
+        elif choice == UserChoice.CREATE.value[0]:
+            simple_project_init()
+            prompt_to_continue()
+        
         elif choice == UserChoice.INIT.value[0]:
-            git_init_push()
+            origin_url = prompt_for_origin()
+            init_git_repo(origin_url)
             prompt_to_continue()
         
         elif choice == UserChoice.EXIT.value[0]:
             logger.info("Exiting the application. Goodbye!")
-            print("Exiting the application. Goodbye!")
+            #print("Exiting the application. Goodbye!")
             break
 
 
