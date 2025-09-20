@@ -61,14 +61,14 @@ from src.git_init import (
 logger = setup_logging()
 
 def main():
-    error_message = None
-    warning_message = None
-
     while True:
+        # Ensure these are always initialized at the start of each loop
+        error_message = None
+        warning_message = None
+
         clear_screen()
         display_title(PROGRAM_TITLE, PROGRAM_AUTHOR, PROGRAM_HELP_TEXT, PROGRAM_VERSION, PROGRAM_DATE)
 
-        # Try to initialize repo
         repo, branch_name, latest_tag = initialize_repository()
         if repo is None:
             show_warning("You are not in a Git repository. Only project creation and repository initialization are available.")
@@ -95,9 +95,9 @@ def main():
             else:
                 show_error("Invalid choice. Please try again.")
                 prompt_to_continue()
-            continue  # Next loop iteration
+            continue
 
-        # (continue as before with the full menu if inside a repo)
+        # Repo is valid, show full menu
         print_repository_info(repo, branch_name, latest_tag)
         try:
             comparison_result = compare_with_origin(repo, branch_name)
@@ -105,7 +105,6 @@ def main():
         except Exception as e:
             logger.error(f"Error comparing with origin: {e}")
             show_error(f"Error comparing with origin: {e}")
-
         log_options()
         log_separator()
 
